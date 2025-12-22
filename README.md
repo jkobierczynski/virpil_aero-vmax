@@ -25,9 +25,16 @@ After testing the original bindings, the following changes were made:
 - Moved **Cycle Camera View** from **F4** to **Z**
 - Set **Mouse Button 3** (middle mouse) for Freelook
 - Set **Right Alt** for 3rd-person Freelook
+- Removed **Numpad 1-9** for load/save views
 - Assigned **Numpad 4–9** for camera XYZ movement
 
 ### Miscellaneous
 - **-** (minus) key for VoIP
 - **=** (equals) key to toggle Tobii eye tracking
 - Corrected **Eject** binding on **[M]** (previously conflicting with Shield Cap Decrease)
+- unbind Eject button
+- set **Left d key** to close doors
+- set **Right d key** to open doors
+- set **Left l key** to Lock doors
+- set **Right l key** to Unlock doors
+  
