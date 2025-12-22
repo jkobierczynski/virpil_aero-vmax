@@ -21,7 +21,7 @@ After testing the original bindings, the following changes were made:
 - Moved **VTOL Cycle** to the former Open Door Toggle position
 - Changed **Capacitor Reset** to no longer require a Modifier key
 
-### Camera & View Changes
+### Camera & View Changes (my preferences for streaming with a left numberpad)
 - Moved **Cycle Camera View** from **F4** to **Z**
 - Set **Mouse Button 3** (middle mouse) for Freelook
 - Set **Right Alt** for 3rd-person Freelook
