@@ -1,25 +1,33 @@
-This is a VIRPIL config for a VPC CDT-VMAX Throttle + RIGHT VPC CDT-AEROMAX joystick combination.
-Based on Subliminal Virpil VMAX Throttle + Aeromax-R Enhanced Star Citizen Bindings located on:
-https://store.subliminal.gg/en-eur/products/virpil-vmax-throttle-aeromax-r-enhanced-star-citizen-bindings-joystick-gremlin-required
+# VIRPIL Config for VPC CDT-VMAX Throttle + RIGHT VPC CDT-AEROMAX Joystick Combination
 
-After testing these I noticed:
-for Joystick Gremlim:
- -I didn't liked the NAV/SCM overlay on Button 21 and the AUX overlay on Button 22 of the Throttle as much as the Missile overlay mode on Button 3 on the AEROMAX.
- -I've kept the Missile overlay to keep the flip trigger switching between Missile mode and gun mode. 
- -I've removed the NAV/SCM overlay from these buttons to prevent mode switching.
-For Star Citizen 
- Switched Y, Z axis for jaw, roll
- Set Brake on where Master Mode Cycle mode on Throttle was
- Moved Master Mode Cycle mode where Auxiliary Mode Cycle was
- Moved Auxilary mode switch to where the Decoy button was
- Moved the Decoy to where the Decouple button was
- Moved the Decouple to where the VTOL Cycle button was
- Moved the VTOL to where the Open Door Toggle was
- Changed the Capacitor Reset to make the Modifier key unnecessary
- Moved Cycle camera view from F4 to Z
- Set 3rd mouse button for Freelook
- R-alt for Freelook 3rd person
- 4-9 keynum for camera XYZ movement
- - for VoIP
- = for toggle tobii
- corrected eject on [M] Shield Cap Decrease
+This configuration is based on **Subliminal's Virpil VMAX Throttle + Aeromax-R Enhanced Star Citizen Bindings**, available at:  
+[https://store.subliminal.gg/en-eur/products/virpil-vmax-throttle-aeromax-r-enhanced-star-citizen-bindings-joystick-gremlin-required](https://store.subliminal.gg/en-eur/products/virpil-vmax-throttle-aeromax-r-enhanced-star-citizen-bindings-joystick-gremlin-required)
+
+After testing the original bindings, the following changes were made:
+
+## Joystick Gremlin Changes
+- Did not like the **NAV/SCM overlay** on Throttle Button 21 and the **AUX overlay** on Button 22 as much as the **Missile overlay** on AEROMAX Button 3.
+- Kept the Missile overlay to maintain flip trigger switching between Missile mode and Gun mode.
+- Removed the NAV/SCM overlay from these buttons to prevent accidental mode switching.
+
+## Star Citizen Changes
+### Axis & Mode Adjustments
+- Switched **Y** and **Z** axes (Yaw ↔ Roll)
+- Set **Brake** to the former Master Mode Cycle position on the Throttle
+- Moved **Master Mode Cycle** to the former Auxiliary Mode Cycle position
+- Moved **Auxiliary Mode Cycle** to the former Decoy button position
+- Moved **Decoy** to the former Decouple button position
+- Moved **Decouple** to the former VTOL Cycle button position
+- Moved **VTOL Cycle** to the former Open Door Toggle position
+- Changed **Capacitor Reset** to no longer require a Modifier key
+
+### Camera & View Changes
+- Moved **Cycle Camera View** from **F4** to **Z**
+- Set **Mouse Button 3** (middle mouse) for Freelook
+- Set **Right Alt** for 3rd-person Freelook
+- Assigned **Numpad 4–9** for camera XYZ movement
+
+### Miscellaneous
+- **-** (minus) key for VoIP
+- **=** (equals) key to toggle Tobii eye tracking
+- Corrected **Eject** binding on **[M]** (previously conflicting with Shield Cap Decrease)
