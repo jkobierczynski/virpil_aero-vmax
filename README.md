@@ -8,7 +8,7 @@ After testing the original bindings, the following changes were made:
 ## Joystick Gremlin Changes
 - Did not like the **NAV/SCM overlay** on Throttle Button 21 and the **AUX overlay** on Button 22 as much as the **Missile overlay** on AEROMAX Button 3.
 - Kept the Missile overlay to maintain flip trigger switching between Missile mode and Gun mode.
-- Removed the NAV/SCM overlay from these buttons to prevent accidental mode switching.
+- Removed the NAV/SCM overlay from these buttons to bind switching between the modes directly inside Star Citizen.
 
 ## Star Citizen Changes
 ### Axis & Mode Adjustments
