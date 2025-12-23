@@ -13,8 +13,9 @@ After testing the original bindings, the following changes were made:
 ## Star Citizen Changes
 ### Axis & Mode Adjustments
 - Switched **Y** and **Z** axes (Yaw ↔ Roll)
-- Set **Brake** to the former Master Mode Cycle position on the Throttle
-- Moved **Master Mode Cycle** to the former Auxiliary Mode Cycle position
+- Kept **Master Mode Cycle** on the Master Mode Cycle position on the Throttle
+- Moved **Quantum Drive engagement** also on the Master Mode Cycle position on the Throttle
+- Set **Brake** to the former Auxiliary Mode Cycle position 
 - Moved **Auxiliary Mode Cycle** to the former Decoy button position
 - Moved **Decoy** to the former Decouple button position
 - Moved **Decouple** to the former VTOL Cycle button position
