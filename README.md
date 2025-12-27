@@ -3,10 +3,10 @@
 This configuration is based on **Subliminal's Virpil VMAX Throttle + Aeromax-R Enhanced Star Citizen Bindings**, available at:  
 https://subliminalstv.gumroad.com/l/Enhanced_Virpil_VMAX_Aeromax-R
 
-After testing the original bindings, the following changes were made:
+After testing the original bindings, I made the following changes to accommodate some of my personal preferences:
 
 ## Joystick Gremlin Changes
-- I Did not like the **NAV/SCM overlay** on Throttle Button 21 and the **AUX overlay** on Button 22 as much as the **Missile overlay** on AEROMAX Button 3.
+- I did not like the **NAV/SCM overlay** on Throttle Button 21 and the **AUX overlay** on Button 22 as much as the **Missile overlay** on AEROMAX Button 3.
 - Kept the Missile overlay to maintain flip trigger switching between Missile mode and Gun mode.
 - Removed the NAV/SCM overlay from these buttons to bind switching between the modes directly inside Star Citizen.
 
