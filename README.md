@@ -1,7 +1,7 @@
 # VIRPIL Config for VPC CDT-VMAX Throttle + RIGHT VPC CDT-AEROMAX Joystick Combination
 
 This configuration is based on **Subliminal's Virpil VMAX Throttle + Aeromax-R Enhanced Star Citizen Bindings**, available at:  
-[https://store.subliminal.gg/en-eur/products/virpil-vmax-throttle-aeromax-r-enhanced-star-citizen-bindings-joystick-gremlin-required](https://store.subliminal.gg/en-eur/products/virpil-vmax-throttle-aeromax-r-enhanced-star-citizen-bindings-joystick-gremlin-required)
+https://subliminalstv.gumroad.com/l/Enhanced_Virpil_VMAX_Aeromax-R
 
 After testing the original bindings, the following changes were made:
 
