@@ -11,7 +11,7 @@ After testing the original bindings, the following changes were made:
 - Removed the NAV/SCM overlay from these buttons to bind switching between the modes directly inside Star Citizen.
 
 ## Star Citizen Changes
-### Axis & Mode Adjustments
+### Axis & Mode Adjustments (personal preferences)
 - Switched **Y** and **Z** axes (Yaw ↔ Roll)
 - Kept **Master Mode Cycle** on the Master Mode Cycle position on the Throttle
 - Moved **Quantum Drive engagement** also on the Master Mode Cycle position on the Throttle
