@@ -28,7 +28,6 @@ After testing the original bindings, the following changes were made:
 - Set **Right Alt** for 3rd-person Freelook
 - Removed **Numpad 1-9** for load/save views
 - Assigned **Numpad 4–9** for camera XYZ movement
-- Removed **Numpad /** to prevent switching to VR mode
 
 ### Miscellaneous
 - **-** (minus) key for VoIP

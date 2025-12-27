@@ -172,7 +172,7 @@
    <rebind input="js2_ "/>
   </action>
   <action name="v_view_freelook_mode">
-   <rebind input="kb1_ "/>
+   <rebind input="mo1_mouse3"/>
    <rebind input="js2_ "/>
   </action>
   <action name="v_view_interact">
@@ -696,7 +696,7 @@
    <rebind input="js2_button20"/>
   </action>
   <action name="v_weapon_toggle_launch_missile">
-   <rebind input="js2_button4"/>
+   <rebind input="js2_button1"/>
   </action>
  </actionmap>
  <actionmap name="spaceship_defensive">
@@ -1342,9 +1342,6 @@
    <rebind input="js1_button59"/>
   </action>
   <action name="hmd_recenter">
-   <rebind input="kb1_ "/>
-  </action>
-  <action name="hmd_toggle">
    <rebind input="kb1_ "/>
   </action>
  </actionmap>
