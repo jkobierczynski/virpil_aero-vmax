@@ -13,14 +13,19 @@ After testing the original bindings, the following changes were made:
 ## Star Citizen Changes
 ### Axis & Mode Adjustments
 - Switched **Y** and **Z** axes (Yaw ↔ Roll)
+- Unbind Right Shift from **v_lock_rotation**
 - Kept **Master Mode Cycle** on the Master Mode Cycle position on the Throttle
+- Moved **Operator Mode Cycle Forward** to former Decoy position
 - Moved **Quantum Drive engagement** also on the Master Mode Cycle position on the Throttle
 - Set **Brake** to the former Auxiliary Mode Cycle position 
 - Moved **Auxiliary Mode Cycle** to the former Decoy button position
-- Moved **Decoy** to the former Decouple button position
+- Moved **Decoy** / **Noise** to the former Decouple button position + modifier button
 - Moved **Decouple** to the former VTOL Cycle button position
 - Moved **VTOL Cycle** to the former Open Door Toggle position
 - Changed **Capacitor Reset** to no longer require a Modifier key
+- Moved **Engineering Assignment Reset** to not longer require a physical modifier button
+- Corrected **Eject** binding on **[M]** (previously conflicting with Shield Cap Decrease)
+- Unbind **Door Lock** and **Door Unlock** from joystick buttons
 
 ### Camera & View Changes (my preferences for streaming with a left numberpad)
 - Moved **Cycle Camera View** from **F4** to **Z**
@@ -32,7 +37,7 @@ After testing the original bindings, the following changes were made:
 ### Miscellaneous
 - **-** (minus) key for VoIP
 - **=** (equals) key to toggle Tobii eye tracking
-- Corrected **Eject** binding on **[M]** (previously conflicting with Shield Cap Decrease)
+
 - unbind Eject button
 - set **Left d key** to close doors
 - set **Right d key** to open doors
