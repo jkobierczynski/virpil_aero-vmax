@@ -1,5 +1,5 @@
-<ActionMaps version="1" optionsVersion="2" rebindVersion="2" profileName="KJ_450_LIVE_VMAX_AERO">
- <CustomisationUIHeader label="KJ_450_LIVE_VMAX_AERO" description="" image="">
+<ActionMaps version="1" optionsVersion="2" rebindVersion="2" profileName="KJ_481_LIVE_VMAX_AERO">
+ <CustomisationUIHeader label="KJ_481_LIVE_VMAX_AERO" description="" image="">
   <devices>
    <keyboard instance="1"/>
    <mouse instance="1"/>
@@ -79,7 +79,10 @@
    <rebind input="js2_ "/>
   </action>
   <action name="v_emergency_exit">
-   <rebind input="js1_button41"/>
+   <rebind input="js1_button42"/>
+  </action>
+  <action name="v_light_amplification_toggle">
+   <rebind input="js1_button23"/>
   </action>
   <action name="v_enter_remote_turret_1">
    <rebind input="kb1_up"/>
@@ -393,19 +396,19 @@
  </actionmap>
  <actionmap name="spaceship_targeting_advanced">
   <action name="v_target_cycle_all_back">
-   <rebind input="js2_button37" multiTap="2"/>
+   <rebind input="js2_button40" multiTap="2"/>
   </action>
   <action name="v_target_cycle_all_fwd">
-   <rebind input="js2_button39" multiTap="2"/>
+   <rebind input="js2_button38" multiTap="2"/>
   </action>
   <action name="v_target_cycle_all_reset">
-   <rebind input="js2_button40" multiTap="2"/>
+   <rebind input="js2_button39" multiTap="2"/>
   </action>
   <action name="v_target_cycle_attacker_back">
    <rebind input="js2_ "/>
   </action>
   <action name="v_target_cycle_attacker_fwd">
-   <rebind input="js2_button38" multiTap="2"/>
+   <rebind input="js2_button37" multiTap="2"/>
   </action>
   <action name="v_target_cycle_attacker_reset">
    <rebind input="js2_ "/>
@@ -420,13 +423,13 @@
    <rebind input="js2_ "/>
   </action>
   <action name="v_target_cycle_hostile_back">
-   <rebind input="js2_button37"/>
+   <rebind input="js2_button40"/>
   </action>
   <action name="v_target_cycle_hostile_fwd">
-   <rebind input="js2_button39"/>
+   <rebind input="js2_button38"/>
   </action>
   <action name="v_target_cycle_hostile_reset">
-   <rebind input="js2_button40"/>
+   <rebind input="js2_button39"/>
   </action>
   <action name="v_target_cycle_in_view_reset">
    <rebind input="js2_ "/>
@@ -444,7 +447,7 @@
    <rebind input="js2_button20"/>
   </action>
   <action name="v_target_under_reticle">
-   <rebind input="js2_button38"/>
+   <rebind input="js2_button37"/>
   </action>
  </actionmap>
  <actionmap name="spaceship_target_hailing">
@@ -576,7 +579,7 @@
    <rebind input="js2_ "/>
   </action>
   <action name="turret_remote_exit">
-   <rebind input="js1_button41"/>
+   <rebind input="js1_button42"/>
   </action>
   <action name="turret_toggle_mouse_mode">
    <rebind input="js1_button54"/>
