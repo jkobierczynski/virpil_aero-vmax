@@ -16,18 +16,25 @@ After testing the original bindings, I made the following changes to accommodate
 ### Axis & Mode Adjustments (personal preferences)
 - Switched **Y** and **Z** axes (Yaw ↔ Roll)
 - Unbind Right Shift from **v_lock_rotation**
-- Kept **Master Mode Cycle** on the Master Mode Cycle position on the Throttle
-- Moved **Operator Mode Cycle Forward** to former Decoy position
-- Moved **Quantum Drive engagement** also on the Master Mode Cycle position on the Throttle
-- Set **Brake** to the former Auxiliary Mode Cycle position 
+- Kept **Master Mode Cycle** on the Master Mode Cycle position on the Throttle using tap
+- Moved **Quantum Drive engagement** also on the Master Mode Cycle position on the Throttle with hold to trigger
+- Set **Brake** to the former Auxiliary Mode Cycle position
 - Moved **Auxiliary Mode Cycle** to the former Decoy button position
+- Moved **Operator Mode Cycle Forward** to former Decoy position
 - Moved **Decoy** / **Noise** to the former Decouple button position + modifier button
 - Moved **Decouple** to the former VTOL Cycle button position
-- Moved **VTOL Cycle** to the former Open Door Toggle position
+- Moved **VTOL Cycle** to the former Open Door Toggle position, with no door buttons on joystick anymore
+- | Function | Now on (former position) | Notes |
+|---|---|---|
+| **Brake** | Auxiliary Mode Cycle | |
+| **Auxiliary Mode Cycle** | Decoy | |
+| **Operator Mode Cycle Forward** | Decoy | |
+| **Decoy** / **Noise** | Decouple | + modifier button |
+| **Decouple** | VTOL Cycle | |
+| **VTOL Cycle** | Open Door Toggle | Door buttons removed from joystick |
 - Changed **Capacitor Reset** to no longer require a Modifier key
-- Moved **Engineering Assignment Reset** to not longer require a physical modifier button
-- Corrected **Eject** binding on **[M]** (previously conflicting with Shield Cap Decrease)
-- Unbind **Door Lock** and **Door Unlock** from joystick buttons
+- Moved **Engineering Assignment Reset** to no longer require a physical modifier button
+- Unbound **Eject** (was on [M], removed to prevent accidental ejection).
 
 ### Camera & View Changes (my preferences for streaming with a left numberpad)
 - Moved **Cycle Camera View** from **F4** to **Z**
@@ -39,10 +46,9 @@ After testing the original bindings, I made the following changes to accommodate
 ### Miscellaneous
 - **-** (minus) key for VoIP
 - **=** (equals) key to toggle Tobii eye tracking
-
 - unbind Eject button
-- set **Left d key** to close doors
-- set **Right d key** to open doors
-- set **Left l key** to Lock doors
-- set **Right l key** to Unlock doors
+- set **Left shift + D key** to Close doors
+- set **Right shift + D key** to Open doors
+- set **Left shift + L key** to Lock doors
+- set **Right shift + L key** to Unlock doors
   
