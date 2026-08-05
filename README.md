@@ -34,7 +34,6 @@ After testing the original bindings, I made the following changes to accommodate
 | Function | Now on (former position) | Notes |
 |---|---|---|
 | **Brake** | Auxiliary Mode Cycle | |
-| **Auxiliary Mode Cycle** | Decoy | |
 | **Operator Mode Cycle Forward** | Decoy | |
 | **Decoy** / **Noise** | Decouple | + modifier button |
 | **Decouple** | VTOL Cycle | |
