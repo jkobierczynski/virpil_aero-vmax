@@ -3,6 +3,8 @@
 This configuration is based on **Subliminal's Virpil VMAX Throttle + Aeromax-R Enhanced Star Citizen Bindings**, available at:  
 https://subliminal.gg/bindings/virpil-vmax-aeromax-r
 
+Joystick Gremlin is effectively required here: Star Citizen has no single dedicated key that sets missile mode — arming and firing share one hold-and-release control — while the Aeromax-R flip trigger emits only a press event, with no separate signal on release. Gremlin bridges the gap by splitting the trigger's press and release into two distinct vJoy buttons.
+
 After testing the original bindings, I made the following changes to accommodate some of my personal preferences:
 
 ## Joystick Gremlin Changes
