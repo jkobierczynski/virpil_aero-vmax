@@ -33,8 +33,9 @@ After testing the original bindings, I made the following changes to accommodate
 
 | Function | Now on (former position) | Notes |
 |---|---|---|
-| **Brake** | Auxiliary Mode Cycle | |
-| **Operator Mode Cycle Forward** | Decoy | |
+| **Brake** | Mining/Salvage Mode Cycle | |
+| **Operator Mode Cycle Forward** | Decoy [M] Noise| |
+| **Decoy Launch** | Decoupled mode | |
 | **Decoy** / **Noise** | Decouple | + modifier button |
 | **Decouple** | VTOL Cycle | |
 | **VTOL Cycle** | Open Door Toggle | Door buttons removed from joystick |
