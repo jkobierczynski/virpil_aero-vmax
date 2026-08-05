@@ -24,6 +24,7 @@ After testing the original bindings, I made the following changes to accommodate
 - Moved **Decoy** / **Noise** to the former Decouple button position + modifier button
 - Moved **Decouple** to the former VTOL Cycle button position
 - Moved **VTOL Cycle** to the former Open Door Toggle position, with no door buttons on joystick anymore
+
 | Function | Now on (former position) | Notes |
 |---|---|---|
 | **Brake** | Auxiliary Mode Cycle | |
@@ -32,6 +33,7 @@ After testing the original bindings, I made the following changes to accommodate
 | **Decoy** / **Noise** | Decouple | + modifier button |
 | **Decouple** | VTOL Cycle | |
 | **VTOL Cycle** | Open Door Toggle | Door buttons removed from joystick |
+
 - Changed **Capacitor Reset** to no longer require a Modifier key
 - Moved **Engineering Assignment Reset** to no longer require a physical modifier button
 - Unbound **Eject** (was on [M], removed to prevent accidental ejection).
