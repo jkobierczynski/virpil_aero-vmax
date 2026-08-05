@@ -57,10 +57,14 @@ After testing the original bindings, I made the following changes to accommodate
 ### Prerequisites + credits
 
 The physical VIRPIL maps to → Joystick Gremlin → to virtual vJoy sticks → utilized in Star Citizen.
+
 Hidhide is responsible to hide you physical joysticks from Star Citizen, so no conflict happens when you select another control on you stick in Star Citizen.
+
 Joystick Gremlin is effectively required here: Star Citizen's missile controls don't map cleanly onto the Aeromax-R flip trigger, which emits only a press event with no separate signal on release. Gremlin bridges the gap by splitting the trigger's press and release into two distinct vJoy buttons.
 
 The current Joystick Gremlin profile is an older profile-version 9, Subliminal's current is R14/v14, as no changes were necessary, so users on new JG may need to migrate, plus vJoy and HidHide, with links. 
+
 This configuration is based on **Subliminal's Virpil VMAX Throttle + Aeromax-R Enhanced Star Citizen Bindings**, available at:  
 https://subliminal.gg/bindings/virpil-vmax-aeromax-r
+
 The configuration utilizes Joystick Gremlin and HidHide, credits to WhiteMagic (JG) and Nefarius (HidHide).
