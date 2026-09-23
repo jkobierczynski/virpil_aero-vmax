@@ -1,9 +1,14 @@
 # VIRPIL Config for VPC CDT-VMAX Throttle + RIGHT VPC CDT-AEROMAX Joystick Combination
 
-This configuration is based on **Subliminal's Virpil VMAX Throttle + Aeromax-R Enhanced Star Citizen Bindings**, available at:  
-https://subliminal.gg/bindings/virpil-vmax-aeromax-r
+This configuration is based on **Subliminal's Virpil VMAX Throttle + Aeromax-R Enhanced Star Citizen Bindings**, with changes to accommodate some of my personal preferences.
 
-After testing the original bindings, I made the following changes to accommodate some of my personal preferences:
+## Install steps
+- Load the JG profile, 
+- Repoint your own joysticks in Joystick Gremlin under **swap devices**
+- Activate the JG profile
+- Place the layout XML into the SC's control profile folder (LIVE or PTU \user\client\0\controls), select it.
+
+After testing the original bindings, I made the following changes to accommodate some of my personal preferences.
 
 ## Joystick Gremlin Changes
 - I did not like the **NAV/SCM overlay** on Throttle Button 21 and the **AUX overlay** on Button 22 as much as the **Missile overlay** on AEROMAX Button 3.
@@ -14,18 +19,20 @@ After testing the original bindings, I made the following changes to accommodate
 ### Axis & Mode Adjustments (personal preferences)
 - Switched **Y** and **Z** axes (Yaw ↔ Roll)
 - Unbind Right Shift from **v_lock_rotation**
-- Kept **Master Mode Cycle** on the Master Mode Cycle position on the Throttle
-- Moved **Operator Mode Cycle Forward** to former Decoy position
-- Moved **Quantum Drive engagement** also on the Master Mode Cycle position on the Throttle
-- Set **Brake** to the former Auxiliary Mode Cycle position 
-- Moved **Auxiliary Mode Cycle** to the former Decoy button position
-- Moved **Decoy** / **Noise** to the former Decouple button position + modifier button
-- Moved **Decouple** to the former VTOL Cycle button position
-- Moved **VTOL Cycle** to the former Open Door Toggle position
+- Kept **Master Mode Cycle** on the Master Mode Cycle position on the Throttle using tap
+- Moved **Quantum Drive engagement** also on the Master Mode Cycle position on the Throttle with hold to trigger
+
+| Function | Now on (former position) | Notes |
+|---|---|---|
+| **Brake** | Mining/Salvage Mode Cycle | |
+| **Operator Mode Cycle Forward** | Decoy [M] Noise| Noise + modifier button|
+| **Decoy** / **Noise**  | Decoupled mode | |
+| **Decouple** | VTOL Cycle | |
+| **VTOL Cycle** | Open Door Toggle | Door buttons removed from joystick |
+
 - Changed **Capacitor Reset** to no longer require a Modifier key
-- Moved **Engineering Assignment Reset** to not longer require a physical modifier button
-- Corrected **Eject** binding on **[M]** (previously conflicting with Shield Cap Decrease)
-- Unbind **Door Lock** and **Door Unlock** from joystick buttons
+- Moved **Engineering Assignment Reset** to no longer require a physical modifier button
+- Unbound **Eject** (was on [M], removed to prevent accidental ejection).
 
 ### Camera & View Changes (my preferences for streaming with a left numberpad)
 - Moved **Cycle Camera View** from **F4** to **Z**
@@ -37,17 +44,35 @@ After testing the original bindings, I made the following changes to accommodate
 ### Miscellaneous
 - **-** (minus) key for VoIP
 - **=** (equals) key to toggle Tobii eye tracking
-
 - unbind Eject button
-- set **Left d key** to close doors
-- set **Right d key** to open doors
-- set **Left l key** to Lock doors
-- set **Right l key** to Unlock doors
+- set **Left shift + D key** to Close doors
+- set **Right shift + D key** to Open doors
+- set **Left shift + L key** to Lock doors
+- set **Right shift + L key** to Unlock doors
 
 ### sc-binding-board
-- web page for showing Star Citizen keybinding settings 
+- web page for showing Star Citizen keybinding settings
 - only for Joystick Gremlin + VPC CDT-VMAX Throttle + RIGHT VPC CDT-AEROMAX Joystick Combination
 - these are my personal settings
 
 [My Star Citizen keybindings website](https://jurgenkobierczynski.com/sc-bindings-board/index.html)
 ![My Star Citizen keybindings](sc-bindings-board.jpg)
+
+### Caveat
+- Device-GUID caveat (most important). My profile hard-references your hardware GUIDs (AEROMAX {0D49E940…}, VMAX {63B4C490…}) and your vJoy device GUIDs. Anyone else loading must re-point them to their own in Joystick Gremlin.
+- vJoy configuration spec. The vJoy mappings go up to vJoy-1 button 128 and 8 axes, and vJoy-2 button 81 — so you must create 2 vJoy devices with 128 buttons and 8 axes each before loading, or bindings silently won't reach the game.
+
+### Prerequisites + credits
+
+The physical VIRPIL maps to → Joystick Gremlin → to virtual vJoy sticks → utilized in Star Citizen.
+
+Hidhide is responsible to hide your physical joysticks from Star Citizen, so no conflict happens when you select another control on your stick in Star Citizen.
+
+Joystick Gremlin is effectively required here: Star Citizen's missile controls don't map cleanly onto the Aeromax-R flip trigger, which emits only a press event with no separate signal on release. Gremlin bridges the gap by splitting the trigger's press and release into two distinct vJoy buttons.
+
+The current Joystick Gremlin profile is an older profile-version 9, Subliminal's current is R14/v14, as no changes were necessary, so users on new JG may need to migrate, plus vJoy and HidHide, with links.
+
+This configuration is based on **Subliminal's Virpil VMAX Throttle + Aeromax-R Enhanced Star Citizen Bindings**, available at:
+https://subliminal.gg/bindings/virpil-vmax-aeromax-r
+
+The configuration utilizes Joystick Gremlin and HidHide, credits to WhiteMagic (JG) and Nefarius (HidHide).
