@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Star Citizen Binding Board</title>
+<meta name="description" content="View Star Citizen key bindings (actionmaps.xml) and Joystick Gremlin profiles per physical HOTAS button, chart-style.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <h1>Binding Board <span>/ Star Citizen</span></h1>
+    <p>Drop in your <code style="font-family:var(--f-mono);font-size:13px">actionmaps.xml</code> — plus your Joystick Gremlin profile if you use one — and see every stick, throttle and key binding laid out per device.</p>
+  </div>
+  <div class="actions">
+    <input id="q" class="search" type="search" placeholder="Search action or input…" aria-label="Search bindings">
+    <button class="btn primary" id="btnOpen">Open XML</button>
+    <button class="btn" id="btnDemo">Example</button>
+    <input id="file" type="file" accept=".xml,text/xml,application/xml" multiple hidden>
+  </div>
+</header>
+
+<div class="drop" id="drop">
+  <span id="dropInfo"></span>
+</div>
+
+<div class="legend">
+  <div class="cats" id="cats"></div>
+  <div class="modes">
+    <span><b>[H]</b> Hold</span><span><b>[DT]</b> Double tap</span><span><b>[T]</b> Tap</span>
+    <span><b>[LP]</b> Long press</span><span><b>[M·x]</b> With key modifier x</span><span><b>[M]</b> Gremlin modifier layer</span><span><b>[NAV]</b> Gremlin mode</span><span><b>[REL]</b> On release</span>
+  </div>
+</div>
+
+<nav class="tabs" id="tabs" aria-label="Devices"></nav>
+<main id="view"></main>
+
+<details class="help">
+  <summary>Where to find your bindings file</summary>
+  <ul>
+    <li><b>Live profile:</b> <code>…\StarCitizen\LIVE\user\client\0\Profiles\default\actionmaps.xml</code> — contains only the bindings you changed from the game defaults.</li>
+    <li><b>Full export:</b> in game, Options → Keybindings → Advanced Controls Customization → Save/Export, and tick “export complete profile”. The file lands in <code>…\LIVE\user\client\0\controls\mappings\</code> and includes defaults as well.</li>
+    <li><b>Joystick Gremlin / vJoy setups:</b> drop your Gremlin profile XML as well. The page follows each physical button through Gremlin to its vJoy button and on to the game action, and shows modifier layers ([M]), other Gremlin modes ([NAV], [AUX]) and tempo long-presses ([H]). By default vJoy 1 is matched to the game’s js1, vJoy 2 to js2 and so on — change that under the file list if your order differs.</li>
+    <li><b>Three chart pages:</b> choose which device you hold in your left and right hand (a throttle and a stick, two sticks, or just one). The <b>Left</b> and <b>Right</b> pages show one device each; <b>Both</b> puts them side by side like a printed binding chart. Each page keeps its own card positions and pins.</li>
+    <li><b>Making it look like a chart:</b> open a chart page, press <b>Arrange</b>, pick a device picture (VIRPIL stick and throttle are built in, or upload your own), then drag the cards into place and drag each orange pin onto the physical button. Layouts are kept in this browser per device name; use <b>Layout JSON</b> to back one up or move it to another machine.</li>
+    <li>Your file never leaves the page: it is parsed in your browser and remembered locally so it’s here next time.</li>
+  </ul>
+</details>
+
+<script src="js/app.js"></script>
+</body>
+</html>

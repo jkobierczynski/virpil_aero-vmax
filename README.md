@@ -43,4 +43,11 @@ After testing the original bindings, I made the following changes to accommodate
 - set **Right d key** to open doors
 - set **Left l key** to Lock doors
 - set **Right l key** to Unlock doors
-  
+
+### sc-binding-board
+- web page for showing Star Citizen keybinding settings 
+- only for Joystick Gremlin + VPC CDT-VMAX Throttle + RIGHT VPC CDT-AEROMAX Joystick Combination
+- these are my personal settings
+
+[My Star Citizen keybindings website](https://jurgenkobierczynski.com/sc-bindings-board/index.html)
+![My Star Citizen keybindings](sc-bindings-board.jpg)
