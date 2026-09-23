@@ -55,8 +55,8 @@ After testing the original bindings, I made the following changes to accommodate
 - only for Joystick Gremlin + VPC CDT-VMAX Throttle + RIGHT VPC CDT-AEROMAX Joystick Combination
 - these are my personal settings
 
-[My Star Citizen keybindings website](https://jurgenkobierczynski.com/sc-bindings-board/index.html)
-![My Star Citizen keybindings](sc-bindings-board.jpg)
+[My Star Citizen keybindings website](https://jurgenkobierczynski.com/sc-binding-board/index.html)
+![My Star Citizen keybindings](sc-binding-board.jpg)
 
 ### Caveat
 - Device-GUID caveat (most important). My profile hard-references your hardware GUIDs (AEROMAX {0D49E940…}, VMAX {63B4C490…}) and your vJoy device GUIDs. Anyone else loading must re-point them to their own in Joystick Gremlin.
