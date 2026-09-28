@@ -59,7 +59,7 @@ is matched to the game's `js1`, vJoy 2 to `js2`, and so on.
 Pictures: VIRPIL VMAX throttle and Aeromax-R stick are built in (two views
 each). Any other device can use an uploaded picture.
 
-### Default layout for first-time visitors
+### Default layout, view and bindings
 
 Put a `default-layout.json` next to `index.html` and the page starts from it:
 
@@ -67,30 +67,40 @@ Put a `default-layout.json` next to `index.html` and the page starts from it:
 {
  "app": "sc-binding-board",
  "version": 1,
- "bindings": ["../layout_KJ_481_LIVE_VMAX_AERO_exported.xml",
-              "../Joystick Gremlin Profile [ENH][VMAX+AERO][4.5.0]-KJ.xml"],
+ "bindings": ["layout_KJ_481_LIVE_VMAX_AERO_exported.xml",
+              "Joystick Gremlin Profile [ENH][VMAX+AERO][4.5.0]-KJ.xml"],
+ "tab": "both",
+ "sides": {"left": "vpc cdt-vmax throttle", "right": "right vpc cdt-aeromax"},
  "layouts": { … }
 }
 ```
 
 - `layouts` has the same format as **Layout JSON** (card positions, pins,
-  device pictures). The easiest way to make one: arrange your charts, open
+  device pictures). Easiest way to make one: arrange your charts, open
   **Layout JSON**, press **Copy** and save it as `default-layout.json`.
 - `bindings` (optional) lists the files to show until a visitor drops their
-  own. Paths are relative to `index.html`. They are fetched fresh each visit
-  and never stored, so updating a file in the repo reaches everyone.
-- A visitor's own arrangement always wins: a default only fills in devices
-  they haven't arranged yet. **Layout JSON → Restore default layout** resets
-  everything to the defaults.
-- The file is fetched, so the page has to be served over http(s), for example
-  GitHub Pages or `python -m http.server` in the repo folder. Opened straight
-  from disk, the defaults are skipped.
+  own. Paths are relative to `index.html`, so keep the files **inside this
+  folder**; only this folder gets deployed to a website.
+  They are fetched fresh each visit and never stored.
+- `tab` (optional) is the page that opens: `both`, `left`, `right`, `find`,
+  `all`, or a device id such as `js1`.
+- `sides` (optional) says which device is in which hand, by device name in
+  lower case (the same names used as keys in `layouts`).
+- When `default-layout.json` changes, every browser applies it again on its
+  next visit, replacing its stored layouts, view and hands. Between changes,
+  a visitor's own arrangement is kept. The **Defaults** button (top right)
+  goes back to the defaults at any time, including the default bindings.
+- The file is fetched, so the page has to be served over http(s). Opened
+  straight from disk, the defaults are skipped.
 
 ## Project layout
 
 ```
 index.html                 page markup
-default-layout.json        layouts and bindings a first-time visitor sees
+default-layout.json        default layouts, view, hands and bindings
+layout_KJ_481_…xml         default game bindings (KJ 4.8.1 export)
+Joystick Gremlin Profile … default Gremlin profile (KJ 4.5.0)
+*.xml                      default bindings files named in default-layout.json
 css/style.css              styles
 js/app.js                  parser, Gremlin resolver and board UI
 assets/virpil/*.webp       device pictures (background removed)

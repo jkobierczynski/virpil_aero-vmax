@@ -1382,8 +1382,8 @@ function openLayoutModal(){
           catch { ta.focus(); ta.select(); toast("Select-all is ready — press Ctrl+C to copy."); }
         }},"Copy"),
         DEFAULTS && DEFAULTS.layouts ? el("button",{class:"btn", title:"Replace every layout with the one in default-layout.json", onclick:()=>{
-          layouts = JSON.parse(JSON.stringify(DEFAULTS.layouts)); saveLayouts(); close(); renderView(); toast("Default layout restored");
-        }},"Restore default layout") : null,
+          close(); resetToDefaults();
+        }},"Reset to defaults") : null,
         el("button",{class:"btn primary", onclick:()=>{
           try{
             const o = JSON.parse(ta.value);
@@ -1441,6 +1441,7 @@ function readFile(f){
 $("#btnOpen").addEventListener("click", ()=>$("#file").click());
 $("#file").addEventListener("change", e=>{ [...e.target.files].forEach(readFile); e.target.value=""; });
 $("#btnDemo").addEventListener("click", ()=>load(DEMO, "example_layout.xml", true));
+$("#btnDefaults").addEventListener("click", ()=>resetToDefaults());
 const drop = $("#drop");
 ["dragenter","dragover"].forEach(t=>document.addEventListener(t, e=>{ if ([...(e.dataTransfer?.types||[])].includes("Files")){ e.preventDefault(); drop.classList.add("drag"); } }));
 ["dragleave","drop"].forEach(t=>document.addEventListener(t, e=>{ if (t==="dragleave" && e.relatedTarget) return; drop.classList.remove("drag"); }));
@@ -1582,44 +1583,74 @@ const DEMO = `<?xml version="1.0"?>
 const DEFAULTS_URL = "default-layout.json";
 let DEFAULTS = null;
 async function fetchText(url){
-  const r = await fetch(encodeURI(url), {cache:"no-cache"});
+  const r = await fetch(url.split("/").map(s => s === ".." || s === "." ? s : encodeURIComponent(s)).join("/"), {cache:"no-cache"});
   if (!r.ok) throw new Error(url + ": HTTP " + r.status);
   return r.text();
 }
+let DEFAULTS_STAMP = "";
 async function loadDefaults(){
-  if (window.SCBB_DEFAULTS) return window.SCBB_DEFAULTS;
-  if (location.protocol === "file:") return null;
-  try { return JSON.parse(await fetchText(DEFAULTS_URL)); } catch { return null; }
+  let text = "";
+  if (window.SCBB_DEFAULTS){ text = JSON.stringify(window.SCBB_DEFAULTS); }
+  else if (location.protocol === "file:") return null;
+  else { try { text = await fetchText(DEFAULTS_URL); } catch { return null; } }
+  try {
+    const d = window.SCBB_DEFAULTS || JSON.parse(text);
+    let h = 0; for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) | 0;
+    DEFAULTS_STAMP = text.length + ":" + h;
+    return d;
+  } catch { toast("default-layout.json isn’t valid JSON, so the defaults were skipped.", true); return null; }
 }
 const untouched = lay => !lay || (!lay.image && Object.values(lay.cards||{}).every(c => c.auto !== false && !c.anchor));
-function applyDefaultLayouts(){
-  const d = DEFAULTS && DEFAULTS.layouts; if (!d || typeof d !== "object") return;
-  let changed = false;
-  for (const [k, lay] of Object.entries(d)){
-    if (untouched(layouts[k])){ layouts[k] = JSON.parse(JSON.stringify(lay)); changed = true; }
+/* force = true when default-layout.json is new or has changed since this browser last saw it:
+   then its layouts, view and hands replace what the browser had stored. Otherwise defaults only fill gaps. */
+function applyDefaults(force){
+  if (!DEFAULTS) return;
+  const d = DEFAULTS.layouts;
+  if (d && typeof d === "object"){
+    let changed = false;
+    for (const [k, lay] of Object.entries(d)){
+      if (force || untouched(layouts[k])){ layouts[k] = JSON.parse(JSON.stringify(lay)); changed = true; }
+    }
+    if (changed) saveLayouts();
   }
-  if (changed) saveLayouts();
+  if (DEFAULTS.sides && (force || !store.get("scbb.sides", null)))
+    store.set("scbb.sides", {left: DEFAULTS.sides.left || null, right: DEFAULTS.sides.right || null});
+  if (DEFAULTS.tab && (force || !store.get("scbb.tab", null))){ S.tab = DEFAULTS.tab; store.set("scbb.tab", S.tab); }
 }
 async function loadDefaultBindings(){
   const list = DEFAULTS && Array.isArray(DEFAULTS.bindings) ? DEFAULTS.bindings : [];
-  const got = [];
+  const got = [], failed = [];
   for (const item of list){
+    const path = typeof item === "string" ? item : (item.path || item.name || "file");
     try {
-      const path = typeof item === "string" ? item : item.path;
       const text = typeof item === "object" && item.text ? item.text : await fetchText(path);
       got.push({text, name: (typeof item === "object" && item.name) || path.split("/").pop()});
-    } catch {}
+    } catch { failed.push(path); }
   }
+  if (failed.length) toast("Couldn’t load the default bindings file" + (failed.length > 1 ? "s " : " ") + failed.join(", ") + ". Paths in default-layout.json are relative to index.html.", true);
   // game bindings first, so the Gremlin profile resolves against them
   got.sort((a,b) => (sniff(a.text) === "sc" ? 0 : 1) - (sniff(b.text) === "sc" ? 0 : 1));
   for (const f of got) load(f.text, f.name, false, true, true);
+  if (got.length && DEFAULTS.tab){ S.tab = DEFAULTS.tab; rebuild(); }
   return got.length > 0;
+}
+async function resetToDefaults(){
+  for (const k of ["scbb.xml","scbb.gremlin","scbb.tab","scbb.sides"]) store.set(k, null);
+  S.sc = S.gr = null; S.scDefault = S.grDefault = S.isExample = false; S.q = ""; $("#q").value = "";
+  layouts = {}; applyDefaults(true);
+  if (!(await loadDefaultBindings())) rebuild();
+  toast("Back to the default layout and bindings");
 }
 
 /* ------------------------------------------------------------ boot */
 (async () => {
   DEFAULTS = await loadDefaults();
-  applyDefaultLayouts();
+  if (DEFAULTS){
+    const fresh = store.get("scbb.defaultsStamp", null) !== DEFAULTS_STAMP;
+    applyDefaults(fresh);
+    store.set("scbb.defaultsStamp", DEFAULTS_STAMP);
+    const b = $("#btnDefaults"); if (b) b.hidden = false;
+  }
   const saved = store.get("scbb.xml", null), savedGr = store.get("scbb.gremlin", null);
   try { if (saved && saved.text){ S.sc = parseActionMaps(saved.text); S.scName = saved.fileName || "actionmaps.xml"; } } catch {}
   try { if (savedGr && savedGr.text){ S.gr = parseGremlin(savedGr.text); S.grName = savedGr.fileName || "gremlin.xml"; } } catch {}

@@ -2,9 +2,14 @@
  "app": "sc-binding-board",
  "version": 1,
  "bindings": [
-  "../layout_KJ_481_LIVE_VMAX_AERO_exported.xml",
-  "../Joystick Gremlin Profile [ENH][VMAX+AERO][4.5.0]-KJ.xml"
+  "layout_KJ_481_LIVE_VMAX_AERO_exported.xml",
+  "Joystick Gremlin Profile [ENH][VMAX+AERO][4.5.0]-KJ.xml"
  ],
+ "tab": "both",
+ "sides": {
+  "left": "vpc cdt-vmax throttle",
+  "right": "right vpc cdt-aeromax"
+ },
  "layouts": {
   "l-vpc throttle (example)": {
    "cards": {
