@@ -232,7 +232,7 @@ function saveLayouts(){
 
 /* ------------------------------------------------------------ state */
 const S = {
-  data:null, fileName:"", isExample:false, scDefault:false, grDefault:false,
+  data:null, fileName:"", isExample:false, scDefault:false, grDefault:false, cmp:null, onlyDiff:false,
   tab: store.get("scbb.tab", null),
   off: new Set(store.get("scbb.off", [])),
   q:"", arrange:false, sort:{col:"dev",dir:1},
@@ -453,7 +453,7 @@ function mergeGremlin(devices, bindings, sc, gr, vjoyRev){
         const raw = base.raw + "\n→ " + via;
         if (matches.length){
           for (const m of matches) push(Object.assign({}, base, {
-            dir: base.dir || m.dir, label:m.label, cat:m.cat, tag:m.tag, mods:m.mods, action:m.action, map:m.map, mode:m.mode,
+            dir: base.dir || m.dir, label:m.label, cat:m.cat, tag:m.tag, mods:m.mods, action:m.action, map:m.map, mode:m.mode, sc:m,
             raw: raw + " → " + m.raw}));
         } else if (en.layer === 0 || o.tts || o.note) {
           push(Object.assign({}, base, {label: o.kind === "key" ? "Key " + via.slice(4) : `vJoy ${o.vjoy} · ${prettyKey(scNode)}`,
@@ -475,7 +475,9 @@ function buildData(){
   const vjoyRev = {};
   if (S.gr) mergeGremlin(devices, bindings, S.sc, S.gr, vjoyRev);
   assignLayoutKeys(devices);
-  return {profileName: S.sc ? S.sc.profileName : "Gremlin profile", devices, bindings, vjoyRev};
+  const data = {profileName: S.sc ? S.sc.profileName : "Gremlin profile", devices, bindings, vjoyRev};
+  applyCompare(data);
+  return data;
 }
 
 /* ------------------------------------------------------------ search vocabulary (shared by every page) */
@@ -579,13 +581,14 @@ function chipFor(b){
   const pfx = devPfx(b.dev);
   const title = `${d ? d.generic : b.dev}\n${b.raw}${b.mode ? "\nmode: "+b.mode : ""}\nClick to show it on the chart`;
   const hit = hits && hits.has(b);
+  const diffCls = b.diff ? " diff" : "";
   if (pfx === "kb"){
     const keys = [...b.mods, b.key].map(k => el("kbd",{}, prettyKey(k)));
     const parts = []; keys.forEach((k,i) => { if (i) parts.push(el("span",{class:"plus"},"+")); parts.push(k); });
-    return el("button",{class:"fchip kb"+(hit?" hit":""), title, onclick:()=>jumpTo(b)}, parts, tagEl);
+    return el("button",{class:"fchip kb"+(hit?" hit":"")+diffCls, title, onclick:()=>jumpTo(b)}, parts, tagEl);
   }
   const mods = b.mods.length ? el("span",{class:"fmods"}, b.mods.map(m=>prettyKey(m)).join("+") + " +") : null;
-  return el("button",{class:"fchip "+(pfx==="mo"?"mo":"js")+(hit?" hit":""), title, onclick:()=>jumpTo(b)},
+  return el("button",{class:"fchip "+(pfx==="mo"?"mo":"js")+(hit?" hit":"")+diffCls, title, onclick:()=>jumpTo(b)},
     el("span",{class:"fdev"}, pfx === "g" ? "JG · " + (d ? d.generic : b.dev) : pfx === "mo" ? "Mouse" : b.dev + (d && d.product ? " · " + d.generic : "")),
     mods, el("span",{class:"finp"}, prettyKey(b.node) + (b.dir ? " " + DIRS[b.dir] : "")), tagEl);
 }
@@ -804,6 +807,44 @@ function onPadButton(pad, n){
   renderFindResults();
 }
 
+
+/* ------------------------------------------------------------ compare with another bindings file */
+/* A game binding is "the same" when the other file binds the same action, in the same action map, to the
+   same device, input, key modifiers and activation (hold, double tap…). Anything else is a difference:
+   red on the charts, the table and Find. Bindings only in the other file are shown as struck-through
+   "ghost" lines on the card of the button they use (followed through Gremlin to the physical button). */
+const bkey = b => [b.map, b.action, b.dev, b.key, [...(b.mods||[])].sort().join("+"), b.tag || ""].join("|");
+function applyCompare(data){
+  const scOnes = data.bindings.filter(b => !b.sc && b.action !== "Joystick Gremlin" && /^(kb|js|mo|gp)\d/.test(b.dev));
+  if (!S.cmp){ for (const b of data.bindings) b.diff = false; data.cmpOnly = null; data.ghosts = null; return; }
+  const theirs = new Set(S.cmp.bindings.map(bkey));
+  for (const b of scOnes) b.diff = !theirs.has(bkey(b));
+  for (const b of data.bindings) if (b.sc) b.diff = !!b.sc.diff;
+  const ours = new Set(scOnes.map(bkey));
+  data.cmpOnly = S.cmp.bindings.filter(cb => !ours.has(bkey(cb)));
+  data.cmpDiff = scOnes.filter(b => b.diff).length;
+  // where to show each binding that is only in the other file
+  const ghosts = new Map(), add = (dev, node, cb) => { const k = dev + "|" + node; if (!ghosts.has(k)) ghosts.set(k, []); ghosts.get(k).push(cb); };
+  const vjoyOf = {}; for (const [v, js] of Object.entries(S.vmap)) vjoyOf[js] = v;
+  for (const cb of data.cmpOnly){
+    add(cb.dev, cb.node, cb);
+    const v = vjoyOf[cb.dev] || (/^js\d+$/.test(cb.dev) ? cb.dev.slice(2) : null);
+    for (const r of (v && data.vjoyRev && data.vjoyRev[v + "|" + cb.node]) || []) add(r.dev, r.node, cb);
+  }
+  data.ghosts = ghosts;
+}
+function loadCompare(text, fileName){
+  try {
+    if (sniff(text) !== "sc") throw new Error("Compare needs a Star Citizen bindings file (actionmaps.xml or an exported layout).");
+    const parsed = parseActionMaps(text);
+    S.cmp = {name:fileName, bindings: parsed.bindings};
+    rebuild();
+    toast(`Comparing with ${fileName}: ${S.data.cmpDiff} binding${S.data.cmpDiff===1?"":"s"} differ, ${S.data.cmpOnly.length} only in ${fileName}.`, false, 8000);
+  } catch(e){ toast(e.message, true); }
+}
+function stopCompare(){ S.cmp = null; S.onlyDiff = false; rebuild(); }
+const isCmpVisible = b => !S.onlyDiff || b.diff || b.ghost;
+
 /* ------------------------------------------------------------ filtering */
 function matchQ(b){
   if (!S.q) return true;
@@ -833,6 +874,16 @@ function renderInfo(){
     else scLine.append(el("button",{class:"linkbtn", onclick:()=>{ S.sc=null; store.set("scbb.xml", null); rebuild(); }},"remove"));
   } else scLine.append(el("span",{},"not loaded — drop actionmaps.xml to turn vJoy buttons into game actions."));
   files.append(scLine);
+  // Compare line
+  if (S.cmp){
+    const cl = el("div",{class:"fileline cmp"}, el("span",{class:"kindlbl"},"Compare with"),
+      el("strong",{}, S.cmp.name),
+      el("span",{class:"meta"}, `${S.data ? S.data.cmpDiff : 0} differ (red) · ${S.data && S.data.cmpOnly ? S.data.cmpOnly.length : 0} only in this file (struck through)`),
+      el("label",{class:"linkbtn"}, el("input",{type:"checkbox", id:"onlyDiff", checked:S.onlyDiff?true:null,
+        onchange:e=>{ S.onlyDiff = e.target.checked; renderView(); }}), " only show differences"),
+      el("button",{class:"linkbtn", onclick:stopCompare},"stop comparing"));
+    files.append(cl);
+  }
   // Gremlin line
   const grLine = el("div",{class:"fileline"}, el("span",{class:"kindlbl"},"Joystick Gremlin"));
   if (S.gr){
@@ -978,22 +1029,25 @@ function groupNodes(dev){
   });
 }
 
-function cardFor(key, node, list){
+function cardFor(key, node, list, ghosts){
   const kind = nodeKind(node);
-  const hasDir = list.some(b => b.dir);
+  const hasDir = list.some(b => b.dir) || (ghosts||[]).some(b => b.dir);
   const ul = el("ul");
-  for (const b of list){
+  const theirs = S.cmp ? S.cmp.name : "";
+  for (const b of [...list, ...(ghosts||[]).map(g => Object.assign({}, g, {ghost:true}))]){
     const tags = [...(b.pre||[])];
     if (b.mods.length) tags.push("M·"+b.mods.map(m=>prettyKey(m).replace(/\s/g,"")).join("+"));
     if (b.tag) tags.push(b.tag);
-    const li = el("li",{style:`--c:var(--c-${b.cat})`, title:`${b.action}\n${b.map}\n${b.raw}${b.mode?"\nmode: "+b.mode:""}`},
+    const li = el("li",{class:(b.diff ? "diff" : "") + (b.ghost ? " ghost" : ""), style:`--c:var(--c-${b.cat})`,
+      title:(b.ghost ? `Only in ${theirs}\n` : b.diff ? `Not in ${theirs}\n` : "") + `${b.action}\n${b.map}\n${b.raw}${b.mode?"\nmode: "+b.mode:""}`},
       hasDir ? el("span",{class:"dir"}, DIRS[b.dir]||"") : null,
       tags.length ? el("span",{class:"tag"}, tags.map(t=>"["+t+"]").join("")) : null,
       el("span",{class:"lbl"}, b.label));
     li._b = b;
     ul.append(li);
   }
-  return el("div",{class:"card", "data-node":key},
+  const anyDiff = list.some(b => b.diff) || (ghosts && ghosts.length);
+  return el("div",{class:"card" + (anyDiff ? " hasdiff" : ""), "data-node":key},
     el("div",{class:"card-h"}, el("span",{class:"inp"}, prettyKey(node)), el("span",{class:"kind"}, kind === "key" ? "" : kind)),
     ul);
 }
@@ -1084,7 +1138,7 @@ function mountBoard(v, spec){
   for (const p of spec.parts){
     for (const [node, list] of groupNodes(p.dev)){
       const key = p.prefix + node;
-      const c = cardFor(key, node, list);
+      const c = cardFor(key, node, list, S.data.ghosts ? S.data.ghosts.get(p.dev.id + "|" + node) : null);
       stage.append(c);
       board.cards[key] = {el:c, h:0, list, part:p};
       order.push(key);
@@ -1385,7 +1439,7 @@ function applyBoardFilter(){
   for (const c of Object.values(board.cards)){
     let any = false, hit = false;
     for (const li of c.el.querySelectorAll("li")){
-      const vis = visibleCat(li._b);
+      const vis = visibleCat(li._b) && isCmpVisible(li._b);
       li.hidden = !vis;
       if (vis){ any = true; const m = matchQ(li._b); li.classList.toggle("dim", !!S.q && !m); if (m) hit = true; }
     }
@@ -1516,7 +1570,8 @@ const COLS = [
   {id:"map", name:"Context", get:b=>b.map},
 ];
 function renderTable(v){
-  const rows = S.data.bindings.filter(b=>visibleCat(b) && matchQ(b));
+  const ghostRows = (S.data.cmpOnly || []).map(cb => Object.assign({}, cb, {ghost:true}));
+  const rows = [...S.data.bindings, ...ghostRows].filter(b=>visibleCat(b) && matchQ(b) && isCmpVisible(b));
   const col = COLS.find(c=>c.id===S.sort.col);
   rows.sort((a,b)=>{
     if (S.sort.col === "dev") return devSort(a.dev,b.dev) || nat(a.node,b.node);
@@ -1527,8 +1582,8 @@ function renderTable(v){
   const head = el("tr",{}, COLS.map(c => el("th",{class:S.sort.col===c.id?"sorted":"", scope:"col",
     onclick:()=>{ S.sort = {col:c.id, dir: S.sort.col===c.id ? -S.sort.dir : 1}; renderView(); }},
     c.name + (S.sort.col===c.id ? (S.sort.dir>0?" ↑":" ↓") : ""))));
-  const body = rows.map(b => el("tr",{},
-    el("td",{class:"mono"}, S.data.devices[b.dev].generic),
+  const body = rows.map(b => el("tr",{class:(b.diff ? "diff" : "") + (b.ghost ? " ghost" : ""), title: b.ghost ? "Only in " + S.cmp.name : b.diff ? "Not in " + S.cmp.name : ""},
+    el("td",{class:"mono"}, (S.data.devices[b.dev] || {generic:b.dev}).generic + (b.ghost ? " · only in " + S.cmp.name : "")),
     el("td",{class:"mono"}, COLS[1].get(b)),
     el("td",{style:`color:var(--c-${b.cat})`}, b.label, el("span",{class:"raw"}, b.action)),
     el("td",{}, COLS[3].get(b)),
@@ -1551,6 +1606,9 @@ function readFile(f){
 $("#btnOpen").addEventListener("click", ()=>$("#file").click());
 $("#file").addEventListener("change", e=>{ [...e.target.files].forEach(readFile); e.target.value=""; });
 $("#btnDemo").addEventListener("click", ()=>load(DEMO, "example_layout.xml", true));
+$("#btnCompare").addEventListener("click", ()=>$("#fileCmp").click());
+$("#fileCmp").addEventListener("change", e=>{ const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  const r = new FileReader(); r.onload = () => loadCompare(String(r.result), f.name); r.onerror = () => toast("Couldn’t read that file.", true); r.readAsText(f); });
 $("#btnDefaults").addEventListener("click", ()=>resetToDefaults());
 const drop = $("#drop");
 ["dragenter","dragover"].forEach(t=>document.addEventListener(t, e=>{ if ([...(e.dataTransfer?.types||[])].includes("Files")){ e.preventDefault(); drop.classList.add("drag"); } }));

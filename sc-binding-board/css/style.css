@@ -12,6 +12,7 @@
   --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}   /* elements with their own display (flex list lines) must still hide */
 html,body{background:var(--ground)}
 body{color:var(--text);font-family:var(--f-body);font-size:15px;line-height:1.35;
   background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.035) 1px, transparent 0);
@@ -181,3 +182,19 @@ kbd{font-family:var(--f-mono);font-size:12px;font-weight:700;display:inline-bloc
 @keyframes flash-stroke{50%{stroke:var(--leader)}}
 @keyframes flash-fill{50%{fill:var(--leader)}}
 @media (prefers-reduced-motion:reduce){ .card.flash,.lines .flash{animation:none} }
+
+/* ---------- compare ---------- */
+:root{ --diff:#ff4b4b; }
+.card li.diff .lbl{color:var(--diff);font-weight:600}
+.card li.diff .tag{color:var(--diff);filter:none}
+.card li.ghost .lbl{color:var(--diff);text-decoration:line-through;opacity:.85}
+.card li.ghost .tag{color:var(--diff);filter:none;opacity:.85}
+.card li.ghost .lbl::before{content:"✕ ";text-decoration:none;display:inline-block}
+.card.hasdiff{border-color:var(--diff)}
+.card.hasdiff .inp{border-color:var(--diff);color:var(--diff)}
+tr.diff td{color:var(--diff)!important}
+tr.ghost td{color:var(--diff)!important;text-decoration:line-through;opacity:.8}
+.fchip.diff{border-color:var(--diff)}
+.fchip.diff .finp,.fchip.diff kbd{color:var(--diff)}
+.fileline.cmp .kindlbl,.fileline.cmp strong{color:var(--diff)}
+.fileline.cmp label{display:inline-flex;align-items:center;gap:4px;text-decoration:none}

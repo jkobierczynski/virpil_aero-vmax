@@ -24,6 +24,12 @@ your HOTAS.
   loaded Gremlin profile to the physical button that drives it. If the other
   hand lights up, use **swap vJoy order** under the file list. (Browsers only
   report a controller after its first button press.)
+- **Compare** with another Star Citizen bindings file (for example a newer
+  Subliminal export): bindings that differ from the loaded ones turn red on
+  the charts, in *All bindings* and in *Find*; bindings only in the other
+  file show struck through on the button they use, followed through
+  Joystick Gremlin to the physical button. "Only show differences" hides the
+  rest.
 - Colour-coded categories (combat, flight, power, mining, salvage…), search,
   and a sortable table of every binding.
 - Everything runs in the browser. Files are never uploaded anywhere; the last
