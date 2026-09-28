@@ -3,7 +3,7 @@
 This configuration is based on **Subliminal's Virpil VMAX Throttle + Aeromax-R Enhanced Star Citizen Bindings**, with changes to accommodate some of my personal preferences.
 
 ## Install steps
-Both files are in the [`sc-binding-board`](sc-binding-board/) folder: `Joystick Gremlin Profile [ENH][VMAX+AERO][4.5.0]-KJ.xml` (JG profile) and `layout_KJ_481_LIVE_VMAX_AERO_exported.xml` (layout XML). The binding board web page shows them by default.
+The two files you need are in this folder: `Joystick Gremlin Profile [ENH][VMAX+AERO][4.5.0]-KJ.xml` (JG profile) and `layout_KJ_481_LIVE_VMAX_AERO_exported.xml` (layout XML). The [`sc-binding-board`](sc-binding-board/) folder holds a copy of both, which the binding board web page shows by default; when you update one, copy it there as well.
 
 - Load the JG profile, 
 - Repoint your own joysticks in Joystick Gremlin under **swap devices**
