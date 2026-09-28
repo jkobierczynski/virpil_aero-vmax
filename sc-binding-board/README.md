@@ -11,6 +11,11 @@ your HOTAS.
 - **Three chart pages:** *Left hand*, *Right hand* and *Both* side by side.
   Pick any device for either hand (throttle + stick, two sticks, or just one).
   Each page remembers its own card positions and leader-line pins.
+- **Find tab:** type what you want to do (“quantum”, “doors”, “js2 button 5”)
+  or press a key or HOTAS button, and see the binding, grouped by the
+  *Options › Keybindings* page it is on in the game. Click a result to jump to
+  that card on the chart. Searches understand everyday words (boost →
+  afterburner, flares → decoys, landing gear → landing system).
 - Colour-coded categories (combat, flight, power, mining, salvage…), search,
   and a sortable table of every binding.
 - Everything runs in the browser. Files are never uploaded anywhere; the last

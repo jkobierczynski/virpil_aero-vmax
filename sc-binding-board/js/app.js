@@ -288,7 +288,7 @@ function rebuild(){
     resolveSides();
     const ids = Object.keys(S.data.devices);
     const ok = ids.includes(S.tab) && S.tab !== S.sides.left && S.tab !== S.sides.right;
-    if (!ok && !["all","left","right","both"].includes(S.tab)) S.tab = preferredTab(S.data);
+    if (!ok && !["all","find","left","right","both"].includes(S.tab)) S.tab = preferredTab(S.data);
     if (S.tab === "both" && !(S.sides.left && S.sides.right)) S.tab = preferredTab(S.data);
   }
   renderAll();
@@ -468,11 +468,263 @@ function buildData(){
   return {profileName: S.sc ? S.sc.profileName : "Gremlin profile", devices, bindings};
 }
 
+/* ------------------------------------------------------------ search vocabulary (shared by every page) */
+/* In-game Options › Keybindings section for each action map. Names follow the game's list as closely as known;
+   the internal map name is always shown next to it because that never changes between patches. */
+const PAGES = {
+  seat_general:"Vehicles – Seats and General", spaceship_general:"Vehicles – Seats and General",
+  spaceship_view:"Vehicles – View", spaceship_movement:"Flight – Movement", spaceship_quantum:"Flight – Quantum Travel",
+  spaceship_docking:"Flight – Docking", spaceship_targeting:"Targeting", spaceship_targeting_advanced:"Targeting – Advanced",
+  spaceship_target_hailing:"Targeting – Hailing", spaceship_weapons:"Weapons", spaceship_missiles:"Missiles",
+  spaceship_defensive:"Defensive – Countermeasures", spaceship_power:"Power Management", spaceship_radar:"Radar",
+  spaceship_scanning:"Scanning", spaceship_ping:"Scanning", spaceship_hud:"HUD", spaceship_mining:"Mining",
+  spaceship_salvage:"Salvage", spaceship_auto_weapons:"Turrets – Auto Weapons", lights_controller:"Lights",
+  vehicle_general:"Ground Vehicles – General", vehicle_driver:"Ground Vehicles – Driving", vehicle_mfd:"Vehicles – MFD",
+  turret_movement:"Turrets – Movement", turret_main:"Turrets – Movement", player:"On Foot", prone:"On Foot – Prone",
+  zero_gravity_eva:"EVA", zero_gravity_traversal:"EVA", player_emotes:"Social – Emotes", player_choice:"Interaction",
+  player_input_optical_tracking:"Head Tracking", ui_textfield:"mobiGlas & Menus", mobiglas:"mobiGlas & Menus",
+  mapui:"Star Map", ui_starmap:"Star Map", tractor_beam:"Tractor Beam", ship_tractor_beam:"Tractor Beam",
+  stopwatch:"Stopwatch", spectator:"Spectator", flycam:"Camera – Free Cam", view_director_mode:"Camera – Director",
+  character_customizer:"Character Editor", incapacitated:"Incapacitated", hacking:"Hacking",
+  RemoteRigidEntityController:"Remote Control", default:"General", debug:"Debug" };
+function pageName(map){
+  if (!map) return "";
+  if (PAGES[map]) return PAGES[map];
+  const h = prettyAction(map.replace(/^spaceship_/,""));
+  return map.startsWith("spaceship_") ? "Flight – " + h : h;
+}
+const SYN = [
+  ["quantum","qdrive","quantum"],["qt","quantum","qdrive"],["jump","quantum","qdrive"],
+  ["gear","landing"],["land","landing"],["door","door"],["doors","door"],
+  ["decouple","decoupl"],["decoupled","decoupl"],["coupled","decoupl"],
+  ["boost","afterburner","boost"],["afterburner","afterburner","boost"],
+  ["cruise","speed_limiter","cruise","speed limiter"],["limiter","speed_limiter","limiter"],
+  ["countermeasure","countermeasure","decoy","noise"],["cm","countermeasure","decoy","noise"],["flare","decoy"],["chaff","noise"],
+  ["missile","missile"],["torpedo","missile","torpedo"],["gun","attack","weapon"],["guns","attack","weapon"],["fire","attack","fire"],["shoot","attack"],
+  ["headlights","light"],["eject","eject"],["leave","exit"],["ready","flightready","flight ready"],
+  ["start","flightready","power"],["mobi","mobiglas"],["ping","ping","scan"],["mine","mining"],
+  ["look","look","view","freelook"],["camera","view","camera"],["gsafe","gforce","gsafe"],["stop","brake"],["hover","vtol"],
+  ["interact","interaction"],["inner","personal_thought","interaction"],["hail","hail","comms"],["voip","voip","foip"]
+];
+function expandTerm(term){
+  const set = new Set([term]);
+  for (const [k,...v] of SYN) if (k === term || (term.length >= 4 && k.startsWith(term))) v.forEach(x => set.add(x));
+  return [...set];
+}
+function normalizeQuery(q){
+  // "js2 button 5" → "js2_button5", "button 5" → "button5", "hat 1" → "hat1"
+  return q.toLowerCase().replace(/\b(button|hat|slider)\s+(\d+)/g,"$1$2").replace(/\b(js|kb|mo|gp)(\d)\s+/g,"$1$2_").trim();
+}
+let _qc = {q:null, terms:[]};
+function qTerms(){
+  if (_qc.q !== S.q) _qc = {q:S.q, terms: normalizeQuery(S.q||"").split(/\s+/).filter(Boolean).map(expandTerm)};
+  return _qc.terms;
+}
+function hayOf(b){
+  return b._hay || (b._hay = [b.label, b.action, b.raw, prettyKey(b.node), b.map, pageName(b.map), b.dev+"_"+b.node,
+    (b.mods||[]).join(" "), (b.pre||[]).join(" ")].join(" ").toLowerCase());
+}
+
+/* ------------------------------------------------------------ Find page */
+let listen = null;          // null | "kb" | "pad"
+let hits = null;            // Set of bindings that match the pressed key/button
+function findGroups(){
+  const groups = new Map();
+  for (const b of S.data.bindings){
+    if (!visibleCat(b) || b.cat === "unbound") continue;
+    const k = b.action === "Joystick Gremlin" ? "jg|" + b.map + "|" + b.label : b.map + "|" + b.action;
+    if (!groups.has(k)) groups.set(k, {key:k, map:b.map, action:b.action, label:b.label, jg:b.action === "Joystick Gremlin", list:[]});
+    groups.get(k).list.push(b);
+  }
+  const terms = qTerms();
+  const out = [];
+  for (const g of groups.values()){
+    let s = 0;
+    if (hits){ if (!g.list.some(b => hits.has(b))) continue; s = 1; }
+    else if (terms.length){
+      for (const alts of terms){
+        let best = 0;
+        const lab = g.label.toLowerCase(), act = (g.action||"").toLowerCase();
+        for (const t of alts){
+          if (lab.startsWith(t)) best = Math.max(best, 5);
+          else if (lab.includes(t)) best = Math.max(best, 4);
+          else if (act.includes(t)) best = Math.max(best, 3);
+          else if (g.list.some(b => (b.raw||"").toLowerCase() === t || (b.dev+"_"+b.node) === t)) best = Math.max(best, 6);
+          else if (g.list.some(b => hayOf(b).includes(t))) best = Math.max(best, 1);
+        }
+        if (!best){ s = 0; break; }
+        s += best;
+      }
+      if (!s) continue;
+    } else s = 1;
+    g.score = s; g.page = g.jg ? "Joystick Gremlin · " + g.map : pageName(g.map);
+    out.push(g);
+  }
+  return out;
+}
+function chipFor(b){
+  const tags = [...(b.pre||[])]; if (b.tag) tags.push(b.tag);
+  const tagEl = tags.length ? el("span",{class:"tag"}, tags.map(t=>"["+t+"]").join("")) : null;
+  const d = S.data.devices[b.dev];
+  const pfx = devPfx(b.dev);
+  const title = `${d ? d.generic : b.dev}\n${b.raw}${b.mode ? "\nmode: "+b.mode : ""}\nClick to show it on the chart`;
+  const hit = hits && hits.has(b);
+  if (pfx === "kb"){
+    const keys = [...b.mods, b.key].map(k => el("kbd",{}, prettyKey(k)));
+    const parts = []; keys.forEach((k,i) => { if (i) parts.push(el("span",{class:"plus"},"+")); parts.push(k); });
+    return el("button",{class:"fchip kb"+(hit?" hit":""), title, onclick:()=>jumpTo(b)}, parts, tagEl);
+  }
+  const mods = b.mods.length ? el("span",{class:"fmods"}, b.mods.map(m=>prettyKey(m)).join("+") + " +") : null;
+  return el("button",{class:"fchip "+(pfx==="mo"?"mo":"js")+(hit?" hit":""), title, onclick:()=>jumpTo(b)},
+    el("span",{class:"fdev"}, pfx === "g" ? "JG · " + (d ? d.generic : b.dev) : pfx === "mo" ? "Mouse" : b.dev + (d && d.product ? " · " + d.generic : "")),
+    mods, el("span",{class:"finp"}, prettyKey(b.node) + (b.dir ? " " + DIRS[b.dir] : "")), tagEl);
+}
+function renderFind(v){
+  const inp = el("input",{class:"fsearch", id:"fq", type:"search", autocomplete:"off", spellcheck:"false",
+    placeholder:"What do you want to do? quantum, landing gear, doors, missiles, js2 button 5…", "aria-label":"Find a binding"});
+  inp.value = S.q || "";
+  inp.addEventListener("input", ()=>{ stopListen(); S.q = inp.value.trim(); $("#q").value = inp.value; renderFindResults(); });
+  const kbBtn = el("button",{class:"btn"+(listen==="kb"?" on":""), id:"listenKb", "aria-pressed":String(listen==="kb"), onclick:()=>setListen(listen==="kb"?null:"kb")}, "Press a key");
+  const padBtn = el("button",{class:"btn"+(listen==="pad"?" on":""), id:"listenPad", "aria-pressed":String(listen==="pad"), onclick:()=>setListen(listen==="pad"?null:"pad")}, "Press a HOTAS button");
+  v.append(el("div",{class:"toolbar"}, el("div",{class:"devname"}, "Find a binding",
+      el("small",{}, "Search by what you want to do, or press the key or button to see what it does")), kbBtn, padBtn));
+  v.append(inp, el("p",{class:"hint", id:"findHint"}, listenHint || "Each result shows the settings page it is on in Options › Keybindings. Click a binding to see it on the chart."));
+  v.append(el("div",{id:"findResults", class:"fresults"}));
+  renderFindResults();
+  if (!listen) requestAnimationFrame(()=>{ if (S.tab === "find" && document.activeElement === document.body) inp.focus({preventScroll:true}); });
+}
+const CHIP_RANK = {g:0, kb:1, js:2, mo:3, gp:4};  // physical (Gremlin) buttons first
+function renderFindResults(){
+  const box = $("#findResults"); if (!box) return;
+  const fi = $("#fq"); if (fi && document.activeElement !== fi) fi.value = S.q || "";
+  box.textContent = "";
+  const rows = findGroups();
+  if (!rows.length){
+    box.append(el("div",{class:"empty"}, hits ? "That input isn’t bound to anything in the loaded files."
+      : S.q ? `Nothing matches “${S.q}”. The live actionmaps.xml only stores bindings you changed, so this action may still be on its game default.`
+      : "No bindings loaded yet."));
+    return;
+  }
+  const sorted = (S.q || hits) ? rows.sort((a,b)=> b.score-a.score || a.label.localeCompare(b.label))
+                               : rows.sort((a,b)=> a.page.localeCompare(b.page) || a.label.localeCompare(b.label));
+  const pages = new Map();
+  for (const g of sorted){ if (!pages.has(g.page)) pages.set(g.page, []); pages.get(g.page).push(g); }
+  for (const [page, list] of pages){
+    const sec = el("section",{class:"fgroup"},
+      el("h2",{}, el("span",{class:"crumb"},"Options › Keybindings ›"), " ", el("span",{class:"fpage"}, page),
+        list[0].jg ? null : el("small",{title:"Internal action map name"}, list[0].map)));
+    const rowsEl = el("div",{class:"frows"});
+    for (const g of list){
+      const cat = g.list[0].cat;
+      rowsEl.append(el("div",{class:"frow"+(hits && g.list.some(b=>hits.has(b)) ? " hit" : "")},
+        el("div",{class:"fact"}, el("div",{class:"flabel", style:`--c:var(--c-${cat})`}, g.label),
+          el("div",{class:"fraw"}, g.jg ? "Joystick Gremlin output" : g.action)),
+        el("div",{class:"fbinds"}, [...g.list].sort((a,b)=> (CHIP_RANK[devPfx(a.dev)]??9)-(CHIP_RANK[devPfx(b.dev)]??9) || devSort(a.dev,b.dev)).map(chipFor))));
+    }
+    sec.append(rowsEl); box.append(sec);
+  }
+}
+function tabForDev(dev){
+  if (dev === S.sides.left) return "left";
+  if (dev === S.sides.right) return "right";
+  return S.data.devices[dev] ? dev : "all";
+}
+function jumpTo(b){
+  stopListen();
+  S.tab = tabForDev(b.dev); store.set("scbb.tab", S.tab);
+  S.q = b.action && b.action !== "Joystick Gremlin" ? b.action : b.label;
+  $("#q").value = S.q;
+  renderTabs(); renderView();
+  setTimeout(()=>{ const h = document.querySelector(".card.hit"); if (h) h.scrollIntoView({block:"center", inline:"center", behavior:"smooth"}); }, 60);
+  toast(`Showing “${b.label}” — clear the search box to see everything again`);
+}
+
+/* listening: keyboard */
+let listenHint = "";
+const CODEMAP = {Space:"space",Enter:"enter",Escape:"escape",Tab:"tab",Backspace:"backspace",CapsLock:"capslock",
+  ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",Insert:"insert",Delete:"delete",Home:"home",End:"end",
+  PageUp:"pgup",PageDown:"pgdn",Minus:"minus",Equal:"equals",BracketLeft:"lbracket",BracketRight:"rbracket",
+  Semicolon:"semicolon",Quote:"apostrophe",Comma:"comma",Period:"period",Slash:"slash",Backslash:"backslash",Backquote:"grave",
+  NumpadAdd:"np_add",NumpadSubtract:"np_subtract",NumpadMultiply:"np_multiply",NumpadDivide:"np_divide",NumpadDecimal:"np_period",
+  NumpadEnter:"np_enter",PrintScreen:"print",Pause:"pause",ScrollLock:"scrolllock",NumLock:"numlock",
+  ShiftLeft:"lshift",ShiftRight:"rshift",ControlLeft:"lctrl",ControlRight:"rctrl",AltLeft:"lalt",AltRight:"ralt"};
+function codeToSc(code){
+  if (CODEMAP[code]) return CODEMAP[code];
+  let m;
+  if ((m=/^Key([A-Z])$/.exec(code))) return m[1].toLowerCase();
+  if ((m=/^Digit(\d)$/.exec(code))) return m[1];
+  if ((m=/^Numpad(\d)$/.exec(code))) return "np_"+m[1];
+  if ((m=/^F(\d+)$/.exec(code))) return "f"+m[1];
+  return null;
+}
+const held = new Set();
+function setHint(t){ listenHint = t; const h = $("#findHint"); if (h) h.textContent = t || "Each result shows the settings page it is on in Options › Keybindings. Click a binding to see it on the chart."; }
+function stopListen(){ if (!listen && !hits) return; listen = null; hits = null; cancelAnimationFrame(padRaf); setHint("");
+  document.querySelectorAll("#listenKb,#listenPad").forEach(b=>{ b.classList.remove("on"); b.setAttribute("aria-pressed","false"); }); }
+function setListen(mode){
+  stopListen();
+  if (!mode){ renderFindResults(); return; }
+  listen = mode; S.q = ""; $("#q").value = ""; const fi = $("#fq"); if (fi) fi.value = "";
+  const btn = $(mode === "kb" ? "#listenKb" : "#listenPad"); if (btn){ btn.classList.add("on"); btn.setAttribute("aria-pressed","true"); }
+  if (mode === "kb") setHint("Press a key or key combination. Esc stops listening.");
+  else startPad();
+  renderFindResults();
+}
+document.addEventListener("keydown", e => {
+  if (listen !== "kb" || S.tab !== "find") return;
+  if (e.code === "Escape"){ stopListen(); renderFindResults(); return; }
+  e.preventDefault();
+  const k = codeToSc(e.code); if (!k) return;
+  held.add(k);
+  const isMod = MODKEYS.has(k);
+  const mods = isMod ? [] : [...held].filter(x => MODKEYS.has(x));
+  const want = [...mods, k].sort().join("+"), plain = k;
+  hits = new Set(S.data.bindings.filter(b => devPfx(b.dev) === "kb" && (
+    [...b.mods, b.key].sort().join("+") === want || (mods.length && !b.mods.length && b.key === plain))));
+  setHint("You pressed " + [...mods, k].map(prettyKey).join(" + ") + ". Esc stops listening.");
+  renderFindResults();
+});
+document.addEventListener("keyup", e => { const k = codeToSc(e.code); if (k) held.delete(k); });
+window.addEventListener("blur", () => held.clear());
+
+/* listening: HOTAS through the browser's Gamepad API (buttons counted from 1, as DirectInput does) */
+let padRaf = 0, padPrev = {};
+const normName = s => (s||"").toLowerCase().replace(/\(.*?\)/g,"").replace(/[^a-z0-9]/g,"");
+function startPad(){
+  if (!navigator.getGamepads){ setHint("This browser can’t read game controllers here. Search for the button instead, for example js2 button 5."); listen = null; return; }
+  setHint("Press a button on your stick or throttle. If nothing happens, press any button once so the browser notices the device.");
+  padPrev = {};
+  const tick = () => {
+    if (listen !== "pad") return;
+    let pads = [];
+    try { pads = [...navigator.getGamepads()].filter(Boolean); }
+    catch { setHint("Controller access is blocked here. Search for the button instead, for example js2 button 5."); listen = null; return; }
+    for (const p of pads){
+      const was = padPrev[p.index] || [];
+      p.buttons.forEach((b,i) => { if (b.pressed && !was[i]) onPadButton(p, i+1); });
+      padPrev[p.index] = p.buttons.map(b => b.pressed);
+    }
+    padRaf = requestAnimationFrame(tick);
+  };
+  padRaf = requestAnimationFrame(tick);
+}
+function onPadButton(pad, n){
+  const pn = normName(pad.id);
+  const sameDev = d => { const dn = normName(d.product || d.title); return dn && (pn.includes(dn.slice(0,12)) || dn.includes(pn.slice(0,12))); };
+  const devs = Object.values(S.data.devices).filter(d => /^(js|g)\d/.test(d.id));
+  let match = devs.filter(sameDev), note = "";
+  if (!match.length){ match = devs; note = " (couldn’t tell which device, showing all)"; }
+  const ids = new Set(match.map(d => d.id));
+  hits = new Set(S.data.bindings.filter(b => ids.has(b.dev) && b.node === "button" + n));
+  setHint((pad.id.replace(/\(.*$/,"").trim() || "Controller") + ": button " + n + note + ". Click the button again to stop.");
+  renderFindResults();
+}
+
 /* ------------------------------------------------------------ filtering */
 function matchQ(b){
   if (!S.q) return true;
-  const q = S.q.toLowerCase();
-  return (b.label+" "+b.action+" "+b.raw+" "+prettyKey(b.node)+" "+b.map).toLowerCase().includes(q);
+  const h = hayOf(b);
+  return qTerms().every(alts => alts.some(t => h.includes(t)));
 }
 const visibleCat = b => !S.off.has(b.cat);
 
@@ -581,6 +833,7 @@ function renderTabs(){
   const tab = (id, kids, extra="") => el("button",{class:"tab"+(S.tab===id?" active":"")+extra,
     onclick:()=>{S.tab=id; store.set("scbb.tab",id); renderTabs(); renderView();}}, kids);
   const L = S.data.devices[S.sides.left], R = S.data.devices[S.sides.right];
+  box.append(tab("find", ["Find", el("small",{}, "search")]));
   box.append(tab("left", [el("span",{class:"src"},"L"), L ? L.generic : "Left hand"], " phys"));
   box.append(tab("right", [el("span",{class:"src"},"R"), R ? R.generic : "Right hand"], " phys"));
   if (L && R) box.append(tab("both", [el("span",{class:"src"},"L+R"), "Both"], " phys"));
@@ -594,6 +847,8 @@ function renderTabs(){
 function renderView(){
   const v = $("#view"); v.textContent = ""; board = null;
   if (!S.data){ v.append(el("div",{class:"empty"},"No bindings loaded yet.")); return; }
+  if (S.tab !== "find") stopListen();
+  if (S.tab === "find") return renderFind(v);
   if (S.tab === "all") return renderTable(v);
   if (S.tab === "left" || S.tab === "right"){
     const d = S.data.devices[S.sides[S.tab]];
@@ -610,7 +865,7 @@ function renderView(){
   S.tab = preferredTab(S.data); renderTabs(); renderView();
 }
 function refreshFilter(){
-  if (S.tab === "all") renderView(); else applyBoardFilter();
+  if (S.tab === "all") renderView(); else if (S.tab === "find") renderFindResults(); else applyBoardFilter();
 }
 
 /* ------------------------------------------------------------ board */
@@ -1183,7 +1438,7 @@ document.addEventListener("paste", e=>{
   if (e.target.closest && e.target.closest("input,textarea")) return;
   const t = e.clipboardData?.getData("text"); if (t && sniff(t)) load(t, "pasted.xml", false);
 });
-let qTimer; $("#q").addEventListener("input", e=>{ clearTimeout(qTimer); qTimer = setTimeout(()=>{ S.q = e.target.value.trim(); refreshFilter(); }, 120); });
+let qTimer; $("#q").addEventListener("input", e=>{ clearTimeout(qTimer); qTimer = setTimeout(()=>{ stopListen(); S.q = e.target.value.trim(); refreshFilter(); }, 120); });
 
 /* ------------------------------------------------------------ example data */
 const DEMO = `<?xml version="1.0"?>
