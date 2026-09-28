@@ -248,10 +248,10 @@ const el = (tag, attrs={}, ...kids) => {
   for (const c of kids.flat()) if (c != null) e.append(c.nodeType ? c : document.createTextNode(c));
   return e;
 };
-function toast(msg, err){
+function toast(msg, err, ms){
   document.querySelectorAll(".toast").forEach(t=>t.remove());
   const t = el("div",{class:"toast"+(err?" err":""), role:"status"}, msg);
-  document.body.append(t); setTimeout(()=>t.remove(), err ? 6000 : 2600);
+  document.body.append(t); setTimeout(()=>t.remove(), ms || (err ? 6000 : 2600));
 }
 
 function sniff(text){
@@ -731,6 +731,7 @@ if (navigator.getGamepads) padRaf = requestAnimationFrame(padTick);
    numbered in the order the browser lists them, and the other numbers are tried if that finds nothing.
    Returns candidate sets of {dev, node}, best first, and a label for messages. */
 const FLASH_MS = 3000;
+const HOTAS_TOAST_MS = 8000;   // messages about a HOTAS press stay up long enough to read while looking at the stick
 let flashTimer = 0, vjoyHinted = false;
 const padName = pad => pad.id.replace(/\(.*$/,"").trim() || "Controller";
 function sameDevice(pad, dev){
@@ -767,14 +768,14 @@ function flashButton(pad, n){
   for (const set of sets){ const keys = onPage(set); if (keys.length){
     flashCards(keys);
     if (/vjoy/i.test(pad.id) && !vjoyHinted){ vjoyHinted = true;
-      toast(`${label} → ${keys.map(k => board.cards[k].part.dev.title + " " + prettyKey(k.replace(/^[LR]:/,""))).join(", ")}. Wrong hand? Use “swap vJoy order” under the file list.`); }
+      toast(`${label} → ${keys.map(k => board.cards[k].part.dev.title + " " + prettyKey(k.replace(/^[LR]:/,""))).join(", ")}. Wrong hand? Use “swap vJoy order” under the file list.`, false, HOTAS_TOAST_MS); }
     return; } }
   if (physical){
     // A physical device the page doesn't know by name: with one physical device shown, assume it's that one.
     const phys = board.parts.filter(p => !/vjoy/i.test(p.dev.product || ""));
     if (phys.length === 1){ const k = phys[0].prefix + "button" + n; if (board.cards[k] && !board.cards[k].el.hidden) return flashCards([k]); }
   }
-  toast(`${label}: nothing on this page uses it.` + (/vjoy/i.test(pad.id) && !S.gr ? " Load your Joystick Gremlin profile to trace vJoy buttons back to your stick." : ""));
+  toast(`${label}: nothing on this page uses it.` + (/vjoy/i.test(pad.id) && !S.gr ? " Load your Joystick Gremlin profile to trace vJoy buttons back to your stick." : ""), false, HOTAS_TOAST_MS);
 }
 function flashCards(keys){
   clearFlash();
@@ -1446,14 +1447,34 @@ function imageSelect(dev, lay){
 }
 
 /* ------------------------------------------------------------ layout modal */
+/* Everything a default-layout.json needs: the loaded bindings files, the open page, which device is in
+   which hand, and every device's layout (card positions, pins, picture and mirroring). Bindings are
+   written as file names; the files must sit next to index.html for the page to load them. */
+function layoutExport(){
+  const out = {app:"sc-binding-board", version:1};
+  const pathFor = name => {
+    const d = DEFAULTS && Array.isArray(DEFAULTS.bindings) ? DEFAULTS.bindings : [];
+    const hit = d.find(b => (typeof b === "string" ? b.split("/").pop() : b.name) === name);
+    return hit ? (typeof hit === "string" ? hit : hit.path || hit.name) : name;
+  };
+  const files = [];
+  if (S.sc && !S.isExample && S.scName) files.push(pathFor(S.scName));
+  if (S.gr && S.grName) files.push(pathFor(S.grName));
+  if (files.length) out.bindings = files;
+  if (S.tab) out.tab = S.tab;
+  const key = id => id && S.data && S.data.devices[id] ? layoutKey(S.data.devices[id]) : null;
+  if (S.sides && (S.sides.left || S.sides.right)) out.sides = {left:key(S.sides.left), right:key(S.sides.right)};
+  out.layouts = layouts;
+  return out;
+}
 function openLayoutModal(){
-  const json = JSON.stringify({app:"sc-binding-board", version:1, layouts}, null, 1);
+  const json = JSON.stringify(layoutExport(), null, 1);
   const ta = el("textarea",{id:"layoutJson", spellcheck:"false"}); ta.value = json;
   const close = () => m.remove();
   const m = el("div",{class:"modal", onclick:e=>{ if (e.target === m) close(); }},
     el("div",{class:"modal-box", role:"dialog", "aria-modal":"true", "aria-label":"Layout JSON"},
       el("h2",{},"Layout JSON"),
-      el("p",{},"Card positions, pins and device images for every device, keyed by device name. Copy it to keep a backup, or paste a saved layout and apply it."),
+      el("p",{},"Card positions, pins and pictures for every device, plus the loaded bindings files, the open page and which device is in which hand. Copy it to keep a backup, or save it as default-layout.json next to index.html to make it what visitors see first (put the bindings files there too). Paste a saved layout and apply it to restore it."),
       ta,
       el("div",{class:"modal-row"},
         el("button",{class:"btn", onclick:close},"Close"),
@@ -1475,7 +1496,10 @@ function openLayoutModal(){
             const o = JSON.parse(ta.value);
             const l = o.layouts || o;
             if (typeof l !== "object") throw 0;
-            layouts = Object.assign(layouts, l); saveLayouts(); close(); renderView(); toast("Layout applied");
+            layouts = Object.assign(layouts, l); saveLayouts();
+            if (o.sides){ store.set("scbb.sides", {left:o.sides.left||null, right:o.sides.right||null}); if (S.data) resolveSides(); }
+            if (o.tab){ S.tab = o.tab; store.set("scbb.tab", S.tab); }
+            close(); if (S.data) rebuild(); else renderView(); toast("Layout applied");
           } catch { toast("That text isn’t a valid layout JSON.", true); }
         }},"Apply pasted layout"))));
   document.body.append(m); ta.focus();

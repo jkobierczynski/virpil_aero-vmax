@@ -83,9 +83,10 @@ Put a `default-layout.json` next to `index.html` and the page starts from it:
 }
 ```
 
-- `layouts` has the same format as **Layout JSON** (card positions, pins,
-  device pictures). Easiest way to make one: arrange your charts, open
-  **Layout JSON**, press **Copy** and save it as `default-layout.json`.
+- Easiest way to make one: arrange your charts, open **Layout JSON**, press
+  **Copy** and save it as `default-layout.json`. The copy includes
+  everything below: the loaded bindings files, the open page, the hands, and
+  every device's layout (card positions, pins, picture, mirroring).
 - `bindings` (optional) lists the files to show until a visitor drops their
   own. Paths are relative to `index.html`, so keep the files **inside this
   folder**; only this folder gets deployed to a website.
