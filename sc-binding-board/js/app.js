@@ -232,7 +232,7 @@ function saveLayouts(){
 
 /* ------------------------------------------------------------ state */
 const S = {
-  data:null, fileName:"", isExample:false,
+  data:null, fileName:"", isExample:false, scDefault:false, grDefault:false,
   tab: store.get("scbb.tab", null),
   off: new Set(store.get("scbb.off", [])),
   q:"", arrange:false, sort:{col:"dev",dir:1},
@@ -260,24 +260,29 @@ function sniff(text){
   if (/<profile[\s>]/.test(head) && /<devices>/.test(text)) return "gremlin";
   return null;
 }
-function load(text, fileName, isExample, quiet){
+function load(text, fileName, isExample, quiet, isDefault){
   try{
     const kind = sniff(text);
     if (kind === "gremlin"){
-      S.gr = parseGremlin(text); S.grName = fileName;
-      store.set("scbb.gremlin", {text, fileName});
+      S.gr = parseGremlin(text); S.grName = fileName; S.grDefault = !!isDefault;
+      if (!isDefault){
+        store.set("scbb.gremlin", {text, fileName});
+        if (S.scDefault){ S.sc = null; S.scDefault = false; S.scName = ""; }   // your own profile replaces the shipped pair
+      }
       if (S.isExample){ S.sc = null; S.isExample = false; S.scName = ""; }
       if (!S.sc){ const sv = store.get("scbb.xml", null); if (sv && sv.text){ try { S.sc = parseActionMaps(sv.text); S.scName = sv.fileName; } catch {} } }
       S.tab = "both";
       if (!quiet) toast(`Loaded Gremlin profile: ${S.gr.devices.length} physical device${S.gr.devices.length>1?"s":""}` + (S.sc ? "" : " — now drop your actionmaps.xml to resolve game actions"));
     } else if (kind === "sc"){
-      S.sc = parseActionMaps(text); S.scName = fileName; S.isExample = !!isExample;
-      if (isExample) S.gr = null;
+      S.sc = parseActionMaps(text); S.scName = fileName; S.isExample = !!isExample; S.scDefault = !!isDefault;
+      if (isExample){ S.gr = null; S.grDefault = false; }
+      else if (isDefault){}
       else {
+        if (S.grDefault){ S.gr = null; S.grDefault = false; S.grName = ""; }
         store.set("scbb.xml", {text, fileName});
         if (!S.gr){ const gv = store.get("scbb.gremlin", null); if (gv && gv.text){ try { S.gr = parseGremlin(gv.text); S.grName = gv.fileName; } catch {} } }
       }
-      if (!isExample && !quiet) toast(`Loaded ${S.sc.bindings.length} bindings from ${fileName}`);
+      if (!isExample && !isDefault && !quiet) toast(`Loaded ${S.sc.bindings.length} bindings from ${fileName}`);
     } else throw new Error("That file is neither a Star Citizen bindings file (<ActionMaps>) nor a Joystick Gremlin profile (<profile>).");
     rebuild();
   } catch(e){ toast(e.message, true); }
@@ -741,15 +746,18 @@ function renderInfo(){
   const scLine = el("div",{class:"fileline"}, el("span",{class:"kindlbl"},"Star Citizen"));
   if (S.sc){
     if (S.isExample) scLine.append(el("span",{class:"example-flag"},"Example"));
+    if (S.scDefault) scLine.append(el("span",{class:"example-flag"},"Default"));
     const devs = Object.keys(S.sc.devices).length;
     scLine.append(el("strong",{}, S.sc.profileName), el("span",{class:"meta"}, `${S.scName} · ${S.sc.bindings.length} bindings · ${devs} device${devs>1?"s":""}`));
     if (S.isExample) scLine.append(el("span",{},"sample data — drop your own actionmaps.xml to replace it."));
+    else if (S.scDefault) scLine.append(el("span",{},"shipped with this page — drop your own actionmaps.xml to replace it."));
     else scLine.append(el("button",{class:"linkbtn", onclick:()=>{ S.sc=null; store.set("scbb.xml", null); rebuild(); }},"remove"));
   } else scLine.append(el("span",{},"not loaded — drop actionmaps.xml to turn vJoy buttons into game actions."));
   files.append(scLine);
   // Gremlin line
   const grLine = el("div",{class:"fileline"}, el("span",{class:"kindlbl"},"Joystick Gremlin"));
   if (S.gr){
+    if (S.grDefault) grLine.append(el("span",{class:"example-flag"},"Default"));
     grLine.append(el("strong",{}, S.grName), el("span",{class:"meta"}, S.gr.devices.map(d=>d.name).join(" · ")),
       el("button",{class:"linkbtn", onclick:()=>{ S.gr=null; store.set("scbb.gremlin", null); rebuild(); }},"remove"));
     files.append(grLine);
@@ -1373,6 +1381,9 @@ function openLayoutModal(){
           try { await navigator.clipboard.writeText(ta.value); toast("Layout copied"); }
           catch { ta.focus(); ta.select(); toast("Select-all is ready — press Ctrl+C to copy."); }
         }},"Copy"),
+        DEFAULTS && DEFAULTS.layouts ? el("button",{class:"btn", title:"Replace every layout with the one in default-layout.json", onclick:()=>{
+          layouts = JSON.parse(JSON.stringify(DEFAULTS.layouts)); saveLayouts(); close(); renderView(); toast("Default layout restored");
+        }},"Restore default layout") : null,
         el("button",{class:"btn primary", onclick:()=>{
           try{
             const o = JSON.parse(ta.value);
@@ -1561,9 +1572,58 @@ const DEMO = `<?xml version="1.0"?>
  </actionmap>
 </ActionMaps>`;
 
+/* ------------------------------------------------------------ defaults */
+/* default-layout.json next to index.html sets what a first-time visitor sees:
+     "layouts"  – card positions, pins, device pictures (same format as Layout JSON)
+     "bindings" – optional list of actionmaps / Gremlin files (paths relative to index.html) shown
+                  until the visitor drops their own.
+   Layouts a visitor has arranged themselves are never overwritten. The file is fetched, so the page
+   must be served over http(s) (GitHub Pages, or `python -m http.server`); opened from disk it is skipped. */
+const DEFAULTS_URL = "default-layout.json";
+let DEFAULTS = null;
+async function fetchText(url){
+  const r = await fetch(encodeURI(url), {cache:"no-cache"});
+  if (!r.ok) throw new Error(url + ": HTTP " + r.status);
+  return r.text();
+}
+async function loadDefaults(){
+  if (window.SCBB_DEFAULTS) return window.SCBB_DEFAULTS;
+  if (location.protocol === "file:") return null;
+  try { return JSON.parse(await fetchText(DEFAULTS_URL)); } catch { return null; }
+}
+const untouched = lay => !lay || (!lay.image && Object.values(lay.cards||{}).every(c => c.auto !== false && !c.anchor));
+function applyDefaultLayouts(){
+  const d = DEFAULTS && DEFAULTS.layouts; if (!d || typeof d !== "object") return;
+  let changed = false;
+  for (const [k, lay] of Object.entries(d)){
+    if (untouched(layouts[k])){ layouts[k] = JSON.parse(JSON.stringify(lay)); changed = true; }
+  }
+  if (changed) saveLayouts();
+}
+async function loadDefaultBindings(){
+  const list = DEFAULTS && Array.isArray(DEFAULTS.bindings) ? DEFAULTS.bindings : [];
+  const got = [];
+  for (const item of list){
+    try {
+      const path = typeof item === "string" ? item : item.path;
+      const text = typeof item === "object" && item.text ? item.text : await fetchText(path);
+      got.push({text, name: (typeof item === "object" && item.name) || path.split("/").pop()});
+    } catch {}
+  }
+  // game bindings first, so the Gremlin profile resolves against them
+  got.sort((a,b) => (sniff(a.text) === "sc" ? 0 : 1) - (sniff(b.text) === "sc" ? 0 : 1));
+  for (const f of got) load(f.text, f.name, false, true, true);
+  return got.length > 0;
+}
+
 /* ------------------------------------------------------------ boot */
-const saved = store.get("scbb.xml", null), savedGr = store.get("scbb.gremlin", null);
-try { if (saved && saved.text){ S.sc = parseActionMaps(saved.text); S.scName = saved.fileName || "actionmaps.xml"; } } catch {}
-try { if (savedGr && savedGr.text){ S.gr = parseGremlin(savedGr.text); S.grName = savedGr.fileName || "gremlin.xml"; } } catch {}
-if (S.sc || S.gr) rebuild(); else load(DEMO, "example_layout.xml", true);
+(async () => {
+  DEFAULTS = await loadDefaults();
+  applyDefaultLayouts();
+  const saved = store.get("scbb.xml", null), savedGr = store.get("scbb.gremlin", null);
+  try { if (saved && saved.text){ S.sc = parseActionMaps(saved.text); S.scName = saved.fileName || "actionmaps.xml"; } } catch {}
+  try { if (savedGr && savedGr.text){ S.gr = parseGremlin(savedGr.text); S.grName = savedGr.fileName || "gremlin.xml"; } } catch {}
+  if (S.sc || S.gr) rebuild();
+  else if (!(await loadDefaultBindings())) load(DEMO, "example_layout.xml", true);
+})();
 })();
