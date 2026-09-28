@@ -170,3 +170,14 @@ details.help li{margin:6px 0}
 kbd{font-family:var(--f-mono);font-size:12px;font-weight:700;display:inline-block;min-width:24px;text-align:center;padding:3px 7px;background:var(--panel-2);border:1px solid var(--line-2);border-bottom-width:3px;border-radius:4px;color:var(--text)}
 .plus{color:var(--faint);font-size:12px}
 @media (max-width:640px){ .frow{grid-template-columns:1fr} .fbinds{justify-content:flex-start} .fsearch{font-size:17px} }
+
+/* ---------- HOTAS button flash (chart pages) ---------- */
+:root{ --flash:#ffd21f; }
+.card.flash{outline:3px solid var(--flash);outline-offset:3px;z-index:6;animation:flash-outline .5s steps(1,end) 6}
+.lines path.flash{stroke:var(--flash);stroke-width:3.5;opacity:1;animation:flash-stroke .5s steps(1,end) 6}
+.lines circle.flash{stroke:var(--flash);stroke-width:4;animation:flash-stroke .5s steps(1,end) 6}
+.lines circle.dot.flash{fill:var(--flash);stroke:none;animation:flash-fill .5s steps(1,end) 6}
+@keyframes flash-outline{50%{outline-color:transparent}}
+@keyframes flash-stroke{50%{stroke:var(--leader)}}
+@keyframes flash-fill{50%{fill:var(--leader)}}
+@media (prefers-reduced-motion:reduce){ .card.flash,.lines .flash{animation:none} }

@@ -16,6 +16,10 @@ your HOTAS.
   *Options › Keybindings* page it is on in the game. Click a result to jump to
   that card on the chart. Searches understand everyday words (boost →
   afterburner, flares → decoys, landing gear → landing system).
+- **Press a HOTAS button on a chart page** and its card and leader line
+  flash yellow for 3 seconds. Uses the browser's controller support, which
+  counts buttons from 1 like the game does; the stick or throttle is matched
+  by name. (Browsers only report a controller after its first button press.)
 - Colour-coded categories (combat, flight, power, mining, salvage…), search,
   and a sortable table of every binding.
 - Everything runs in the browser. Files are never uploaded anywhere; the last

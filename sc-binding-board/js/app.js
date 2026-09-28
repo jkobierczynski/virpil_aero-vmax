@@ -664,7 +664,7 @@ function codeToSc(code){
 }
 const held = new Set();
 function setHint(t){ listenHint = t; const h = $("#findHint"); if (h) h.textContent = t || "Each result shows the settings page it is on in Options › Keybindings. Click a binding to see it on the chart."; }
-function stopListen(){ if (!listen && !hits) return; listen = null; hits = null; cancelAnimationFrame(padRaf); setHint("");
+function stopListen(){ if (!listen && !hits) return; listen = null; hits = null; setHint("");
   document.querySelectorAll("#listenKb,#listenPad").forEach(b=>{ b.classList.remove("on"); b.setAttribute("aria-pressed","false"); }); }
 function setListen(mode){
   stopListen();
@@ -698,20 +698,64 @@ const normName = s => (s||"").toLowerCase().replace(/\(.*?\)/g,"").replace(/[^a-
 function startPad(){
   if (!navigator.getGamepads){ setHint("This browser can’t read game controllers here. Search for the button instead, for example js2 button 5."); listen = null; return; }
   setHint("Press a button on your stick or throttle. If nothing happens, press any button once so the browser notices the device.");
-  padPrev = {};
-  const tick = () => {
-    if (listen !== "pad") return;
-    let pads = [];
-    try { pads = [...navigator.getGamepads()].filter(Boolean); }
-    catch { setHint("Controller access is blocked here. Search for the button instead, for example js2 button 5."); listen = null; return; }
-    for (const p of pads){
-      const was = padPrev[p.index] || [];
-      p.buttons.forEach((b,i) => { if (b.pressed && !was[i]) onPadButton(p, i+1); });
-      padPrev[p.index] = p.buttons.map(b => b.pressed);
-    }
-    padRaf = requestAnimationFrame(tick);
-  };
-  padRaf = requestAnimationFrame(tick);
+}
+/* One controller poller for the whole page: on the Find page (while listening) a press shows what the
+   button does; on a chart page it flashes that button's card and leader line. */
+let padBlocked = false;
+function padTick(){
+  let pads = [];
+  try { pads = [...navigator.getGamepads()].filter(Boolean); }
+  catch { padBlocked = true; if (listen === "pad") setHint("Controller access is blocked here. Search for the button instead, for example js2 button 5."); return; }
+  for (const p of pads){
+    const was = padPrev[p.index] || [];
+    p.buttons.forEach((b,i) => { if (b.pressed && !was[i]) padPress(p, i+1); });
+    padPrev[p.index] = p.buttons.map(b => b.pressed);
+  }
+  padRaf = requestAnimationFrame(padTick);
+}
+function padPress(pad, n){
+  if (S.tab === "find"){ if (listen === "pad") onPadButton(pad, n); }
+  else if (board) flashButton(pad, n);
+}
+if (navigator.getGamepads) padRaf = requestAnimationFrame(padTick);
+
+/* chart pages: flash the pressed button's card and leader line in yellow for 3 seconds */
+const FLASH_MS = 3000;
+let flashTimer = 0;
+const padName = pad => pad.id.replace(/\(.*$/,"").trim() || "Controller";
+function sameDevice(pad, dev){
+  const pn = normName(pad.id), dn = normName(dev.product || dev.title);
+  return !!dn && (pn.includes(dn.slice(0,12)) || dn.includes(pn.slice(0,12)));
+}
+function flashButton(pad, n){
+  if (!board) return;
+  let parts = board.parts.filter(p => sameDevice(pad, p.dev));
+  if (!parts.length){
+    // The pressed device isn't on this page by name. With one physical device shown we can still guess;
+    // a vJoy page doesn't number buttons like the physical stick, so don't guess there.
+    const phys = board.parts.filter(p => !/vjoy/i.test(p.dev.product || ""));
+    if (phys.length !== 1){ toast(`${padName(pad)} button ${n}: that device isn’t on this page.`); return; }
+    parts = phys;
+  }
+  const keys = parts.map(p => p.prefix + "button" + n).filter(k => board.cards[k] && !board.cards[k].el.hidden);
+  if (!keys.length){ toast(`${padName(pad)} button ${n} has no binding on this page.`); return; }
+  flashCards(keys);
+}
+function flashCards(keys){
+  clearFlash();
+  board.flash = new Set(keys);
+  for (const k of keys) board.cards[k].el.classList.add("flash");
+  board.svg.querySelectorAll("[data-card]").forEach(e => { if (board.flash.has(e.dataset.card)) e.classList.add("flash"); });
+  const first = board.cards[keys[0]].el;
+  const r = first.getBoundingClientRect();
+  if (r.bottom < 0 || r.top > innerHeight) first.scrollIntoView({block:"center", behavior:"smooth"});
+  flashTimer = setTimeout(clearFlash, FLASH_MS);
+}
+function clearFlash(){
+  clearTimeout(flashTimer);
+  if (!board || !board.flash) return;
+  board.flash = null;
+  board.stage.querySelectorAll(".flash").forEach(e => e.classList.remove("flash"));
 }
 function onPadButton(pad, n){
   const pn = normName(pad.id);
@@ -972,7 +1016,8 @@ function renderBoth(v, L, R){
 function hint(v, where, extra){
   v.append(el("p",{class:"hint"}, S.arrange
     ? [el("b",{},"Arranging: "), `drag cards to move them; drag a card’s orange pin onto the physical button to draw a leader line; double-click a pin to detach it. Auto-arrange puts every pinned card beside the picture near its button. Positions are saved for ${where}.`]
-    : ["Hover a line for the raw action name. Press ", el("b",{},"Arrange"), " to move cards and pin them to buttons.", extra ? " " + extra : ""]));
+    : ["Hover a line for the raw action name. Press ", el("b",{},"Arrange"), " to move cards and pin them to buttons.",
+       navigator.getGamepads ? " Press a button on your stick or throttle to flash its card." : "", extra ? " " + extra : ""]));
 }
 
 function mountBoard(v, spec){
@@ -1244,10 +1289,13 @@ function drawLines(){
     const mid = ex == null ? `L ${sx} ${sy + (ay<sy?-18:18)}` : `L ${ex} ${sy}`;
     path.setAttribute("d", `M ${sx} ${sy} ${mid} L ${ax} ${ay}`);
     svg.append(path);
+    const fl = board.flash && board.flash.has(n);
     const ring = document.createElementNS(NS,"circle");
     ring.setAttribute("cx",ax); ring.setAttribute("cy",ay); ring.setAttribute("r",9); svg.append(ring);
+    for (const e of [path, ring]){ e.dataset.card = n; if (fl) e.classList.add("flash"); }
     const dot = document.createElementNS(NS,"circle");
     dot.setAttribute("class","dot"); dot.setAttribute("cx",ax); dot.setAttribute("cy",ay); dot.setAttribute("r",3.5); svg.append(dot);
+    dot.dataset.card = n; if (fl) dot.classList.add("flash");
     if (pin){ pin.style.left = ax+"px"; pin.style.top = ay+"px"; pin.classList.remove("docked"); }
   }
 }
