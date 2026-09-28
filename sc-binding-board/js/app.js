@@ -397,7 +397,7 @@ function entryOutputs(entry, gdev){
   }
   return outs;
 }
-function mergeGremlin(devices, bindings, sc, gr){
+function mergeGremlin(devices, bindings, sc, gr, vjoyRev){
   const scIndex = new Map();
   for (const b of (sc ? sc.bindings : [])){
     const k = b.dev + "|" + b.node;
@@ -420,6 +420,10 @@ function mergeGremlin(devices, bindings, sc, gr){
       const node = en.kind + en.id;
       const ttsDone = new Set();
       for (const o of entryOutputs(en, gd)){
+        if (o.kind === "button" && o.vjoy && vjoyRev){
+          const k = o.vjoy + "|button" + o.id;
+          (vjoyRev[k] || (vjoyRev[k] = [])).push({dev:id, node, layer:en.layer});
+        }
         const pre = [];
         if (en.modeTag) pre.push(en.modeTag);
         if (o.trig === "long") pre.push("H");
@@ -468,9 +472,10 @@ function buildData(){
     devices[k] = Object.assign({}, d, vj ? {generic: d.generic + " · vJoy"} : {});
     bindings.push(...d.bindings);
   }
-  if (S.gr) mergeGremlin(devices, bindings, S.sc, S.gr);
+  const vjoyRev = {};
+  if (S.gr) mergeGremlin(devices, bindings, S.sc, S.gr, vjoyRev);
   assignLayoutKeys(devices);
-  return {profileName: S.sc ? S.sc.profileName : "Gremlin profile", devices, bindings};
+  return {profileName: S.sc ? S.sc.profileName : "Gremlin profile", devices, bindings, vjoyRev};
 }
 
 /* ------------------------------------------------------------ search vocabulary (shared by every page) */
@@ -719,27 +724,57 @@ function padPress(pad, n){
 }
 if (navigator.getGamepads) padRaf = requestAnimationFrame(padTick);
 
-/* chart pages: flash the pressed button's card and leader line in yellow for 3 seconds */
+/* Which control was pressed? A physical stick is matched by name. With Joystick Gremlin running (and
+   usually HidHide), the browser only sees Gremlin's "vJoy - Virtual Joystick" devices, so a vJoy button is
+   traced back through the Gremlin profile to the physical button(s) that drive it, and to the game device
+   the vJoy device is mapped to (the "vJoy → game" row). All vJoy devices report the same name; they are
+   numbered in the order the browser lists them, and the other numbers are tried if that finds nothing.
+   Returns candidate sets of {dev, node}, best first, and a label for messages. */
 const FLASH_MS = 3000;
-let flashTimer = 0;
+let flashTimer = 0, vjoyHinted = false;
 const padName = pad => pad.id.replace(/\(.*$/,"").trim() || "Controller";
 function sameDevice(pad, dev){
   const pn = normName(pad.id), dn = normName(dev.product || dev.title);
   return !!dn && (pn.includes(dn.slice(0,12)) || dn.includes(pn.slice(0,12)));
 }
+function padTargets(pad, n){
+  const node = "button" + n;
+  if (!/vjoy/i.test(pad.id)){
+    const devs = Object.values(S.data.devices).filter(d => /^(js|g)\d/.test(d.id) && !/vjoy/i.test(d.product || "") && sameDevice(pad, d));
+    return {label: `${padName(pad)} button ${n}`, sets: [devs.map(d => ({dev:d.id, node}))], physical:true};
+  }
+  let vpads = [];
+  try { vpads = [...navigator.getGamepads()].filter(p => p && /vjoy/i.test(p.id)).sort((a,b) => a.index - b.index); } catch {}
+  if (store.get("scbb.vjoySwap", false)) vpads.reverse();
+  const guess = Math.max(1, vpads.findIndex(p => p.index === pad.index) + 1);
+  const count = Math.max(vpads.length, S.gr ? (S.gr.vjoyCount || 2) : 2, guess);
+  const order = [guess, ...Array.from({length:count}, (_,i) => i+1).filter(v => v !== guess)];
+  const sets = order.map(v => {
+    const t = (S.data.vjoyRev && S.data.vjoyRev[v + "|" + node] || []).slice().sort((a,b) => (a.layer||0) - (b.layer||0));
+    const js = S.vmap[v] || ("js" + v);
+    if (S.data.devices[js]) t.push({dev:js, node});
+    return t;
+  });
+  return {label: `vJoy ${guess} button ${n}`, sets};
+}
+
+/* chart pages: flash the pressed control's card and leader line in yellow for 3 seconds */
 function flashButton(pad, n){
   if (!board) return;
-  let parts = board.parts.filter(p => sameDevice(pad, p.dev));
-  if (!parts.length){
-    // The pressed device isn't on this page by name. With one physical device shown we can still guess;
-    // a vJoy page doesn't number buttons like the physical stick, so don't guess there.
+  const {label, sets, physical} = padTargets(pad, n);
+  const onPage = set => [...new Set(set.flatMap(t => board.parts.filter(p => p.dev.id === t.dev).map(p => p.prefix + t.node)))]
+    .filter(k => board.cards[k] && !board.cards[k].el.hidden);
+  for (const set of sets){ const keys = onPage(set); if (keys.length){
+    flashCards(keys);
+    if (/vjoy/i.test(pad.id) && !vjoyHinted){ vjoyHinted = true;
+      toast(`${label} → ${keys.map(k => board.cards[k].part.dev.title + " " + prettyKey(k.replace(/^[LR]:/,""))).join(", ")}. Wrong hand? Use “swap vJoy order” under the file list.`); }
+    return; } }
+  if (physical){
+    // A physical device the page doesn't know by name: with one physical device shown, assume it's that one.
     const phys = board.parts.filter(p => !/vjoy/i.test(p.dev.product || ""));
-    if (phys.length !== 1){ toast(`${padName(pad)} button ${n}: that device isn’t on this page.`); return; }
-    parts = phys;
+    if (phys.length === 1){ const k = phys[0].prefix + "button" + n; if (board.cards[k] && !board.cards[k].el.hidden) return flashCards([k]); }
   }
-  const keys = parts.map(p => p.prefix + "button" + n).filter(k => board.cards[k] && !board.cards[k].el.hidden);
-  if (!keys.length){ toast(`${padName(pad)} button ${n} has no binding on this page.`); return; }
-  flashCards(keys);
+  toast(`${label}: nothing on this page uses it.` + (/vjoy/i.test(pad.id) && !S.gr ? " Load your Joystick Gremlin profile to trace vJoy buttons back to your stick." : ""));
 }
 function flashCards(keys){
   clearFlash();
@@ -758,14 +793,13 @@ function clearFlash(){
   board.stage.querySelectorAll(".flash").forEach(e => e.classList.remove("flash"));
 }
 function onPadButton(pad, n){
-  const pn = normName(pad.id);
-  const sameDev = d => { const dn = normName(d.product || d.title); return dn && (pn.includes(dn.slice(0,12)) || dn.includes(pn.slice(0,12))); };
-  const devs = Object.values(S.data.devices).filter(d => /^(js|g)\d/.test(d.id));
-  let match = devs.filter(sameDev), note = "";
-  if (!match.length){ match = devs; note = " (couldn’t tell which device, showing all)"; }
-  const ids = new Set(match.map(d => d.id));
-  hits = new Set(S.data.bindings.filter(b => ids.has(b.dev) && b.node === "button" + n));
-  setHint((pad.id.replace(/\(.*$/,"").trim() || "Controller") + ": button " + n + note + ". Click the button again to stop.");
+  const {label, sets} = padTargets(pad, n);
+  const hitSet = set => { const want = new Set(set.map(t => t.dev + "|" + t.node));
+    return S.data.bindings.filter(b => want.has(b.dev + "|" + b.node)); };
+  let found = [];
+  for (const set of sets){ found = hitSet(set); if (found.length) break; }
+  hits = new Set(found);
+  setHint(label + (found.length ? "" : " isn’t used by any binding") + ". Click the button again to stop.");
   renderFindResults();
 }
 
@@ -819,6 +853,10 @@ function renderInfo(){
       sel.addEventListener("change", ()=>{ S.vmap[i] = sel.value; store.set("scbb.vmap", S.vmap); rebuild(); });
       vm.append(el("label",{}, `vJoy ${i} `, sel));
     }
+    const swapped = !!store.get("scbb.vjoySwap", false);
+    vm.append(el("button",{class:"linkbtn", title:"Your browser lists the vJoy devices without numbers. If pressing a button flashes the other hand, swap the order.",
+      onclick:()=>{ store.set("scbb.vjoySwap", !swapped); renderInfo(); toast(!swapped ? "vJoy order swapped for HOTAS button presses" : "vJoy order back to normal"); }},
+      swapped ? "HOTAS presses: vJoy order swapped (undo)" : "wrong hand flashing? swap vJoy order"));
     files.append(vm);
   } else {
     grLine.append(el("span",{},"optional — drop your Gremlin profile to see bindings per physical button."));

@@ -19,7 +19,11 @@ your HOTAS.
 - **Press a HOTAS button on a chart page** and its card and leader line
   flash yellow for 3 seconds. Uses the browser's controller support, which
   counts buttons from 1 like the game does; the stick or throttle is matched
-  by name. (Browsers only report a controller after its first button press.)
+  by name. With Joystick Gremlin running, the browser usually sees only
+  Gremlin's vJoy devices; a vJoy button is then traced back through the
+  loaded Gremlin profile to the physical button that drives it. If the other
+  hand lights up, use **swap vJoy order** under the file list. (Browsers only
+  report a controller after its first button press.)
 - Colour-coded categories (combat, flight, power, mining, salvage…), search,
   and a sortable table of every binding.
 - Everything runs in the browser. Files are never uploaded anywhere; the last
