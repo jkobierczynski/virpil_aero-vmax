@@ -205,3 +205,11 @@ tr.ghost td{color:var(--diff)!important;text-decoration:line-through;opacity:.8}
 .axfill{position:absolute;top:0;bottom:0;left:50%;width:0;background:var(--flash)}
 .axval{position:absolute;inset:0;font-family:var(--f-mono);font-size:9px;line-height:11px;text-align:right;padding-right:3px;color:var(--text);mix-blend-mode:difference}
 .card li.flash{background:rgba(255,210,31,.14)}
+
+/* ---------- controller monitor ---------- */
+details.mon summary{cursor:pointer;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;list-style-position:inside}
+details.mon .monbody{display:flex;flex-direction:column;gap:3px;margin:6px 0 2px 128px;font-size:13px}
+.monrow{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline}
+.monrow b{font-family:var(--f-mono);color:var(--accent)}
+@media (max-width:640px){ details.mon .monbody{margin-left:0} }
+.monwarn{color:var(--c-combat)}

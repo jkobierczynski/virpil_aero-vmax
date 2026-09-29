@@ -738,6 +738,7 @@ function padTick(){
     padAxes(p);
   }
   updateAxisBars();
+  updateMonitor(pads);
   padRaf = requestAnimationFrame(padTick);
 }
 function padPress(pad, n){
@@ -834,6 +835,39 @@ function padHat(pad, n, dir){
   if (S.tab === "find"){ if (listen === "pad") onPadInput(pad, n, "hat", dir); return; }
   if (board) flashInput(pad, n, "hat", dir);
 }
+/* Controller monitor: what the browser reports for each device, and what is pressed right now.
+   If a button never shows up here, the browser doesn't pass it on and the page can't react to it. */
+let monSig = "";
+function updateMonitor(pads){
+  const sum = document.getElementById("padMonSum"); if (!sum) return;
+  if (!pads.length){
+    // Say why nothing shows up when the browser itself is the reason.
+    const why = !window.isSecureContext ? "controllers only work when the page is opened over https:// (or http://localhost)"
+      : padBlocked ? "this browser blocks controller access for this page"
+      : "none seen yet — press any button on a stick or throttle while this page has focus";
+    if (monSig !== why){ monSig = why; sum.textContent = why; document.getElementById("padMonBody").textContent = ""; }
+    return;
+  }
+  const rows = pads.map(p => {
+    const down = p.buttons.map((b,i) => b.pressed ? i+1 : 0).filter(Boolean);
+    const moved = p.axes.map((v,i) => Math.abs(v) > 0.05 && Math.abs(v) <= 1.05 ? `${i+1}:${Math.round(v*100)}%` : "").filter(Boolean);
+    return {name: padName(p), idx: p.index, nb: p.buttons.length, na: p.axes.length, down, moved};
+  });
+  const sig = JSON.stringify(rows); if (sig === monSig) return; monSig = sig;
+  sum.textContent = rows.map(r => `${r.name} (${r.nb} buttons, ${r.na} axes)`).join(" · ");
+  const body = document.getElementById("padMonBody"); body.textContent = "";
+  // highest vJoy button the Gremlin profile sends, per vJoy device
+  let need = 0;
+  for (const k of Object.keys((S.data && S.data.vjoyRev) || {})){ const m = /\|button(\d+)$/.exec(k); if (m) need = Math.max(need, +m[1]); }
+  const short = rows.filter(r => /vjoy/i.test(r.name) && need > r.nb);
+  if (short.length) body.append(el("div",{class:"monrow monwarn"},
+    `Your Gremlin profile uses vJoy buttons up to ${need}, but this browser only reports ${short[0].nb} for vJoy. Presses above ${short[0].nb} (for example the modifier layer) never reach the page, so they can't flash. Try another browser (Chrome, Edge or Firefox), or remap the modifier layer to lower vJoy buttons.`));
+  for (const r of rows) body.append(el("div",{class:"monrow"},
+    el("strong",{}, `#${r.idx} ${r.name}`), el("span",{class:"meta"}, `${r.nb} buttons, ${r.na} axes`),
+    el("span",{}, "pressed: ", el("b",{}, r.down.length ? r.down.join(", ") : "—")),
+    el("span",{class:"meta"}, r.moved.length ? "axes: " + r.moved.join("  ") : "")));
+}
+
 /* live position bar in the header of every axis card that has been moved */
 function updateAxisBars(){
   if (!board || !liveAxes.size) return;
@@ -999,6 +1033,15 @@ function renderInfo(){
     else scLine.append(el("button",{class:"linkbtn", onclick:()=>{ S.sc=null; store.set("scbb.xml", null); rebuild(); }},"remove"));
   } else scLine.append(el("span",{},"not loaded — drop actionmaps.xml to turn vJoy buttons into game actions."));
   files.append(scLine);
+  // Controllers the browser can see (for checking what reaches the page)
+  if (navigator.getGamepads){
+    const det = el("details",{class:"fileline mon", id:"padMon"}, el("summary",{}, el("span",{class:"kindlbl"},"Controllers"), el("span",{class:"meta", id:"padMonSum"},"press any button on a stick or throttle")),
+      el("div",{id:"padMonBody", class:"monbody"}));
+    try { if (store.get("scbb.monOpen", false)) det.open = true; } catch {}
+    det.addEventListener("toggle", ()=>store.set("scbb.monOpen", det.open));
+    monSig = "";   // redraw into the new element
+    files.append(det);
+  }
   // Compare line
   if (S.cmp){
     const cl = el("div",{class:"fileline cmp"}, el("span",{class:"kindlbl"},"Compare with"),

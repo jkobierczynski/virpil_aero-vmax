@@ -116,6 +116,25 @@ Put a `default-layout.json` next to `index.html` and the page starts from it:
 - The file is fetched, so the page has to be served over http(s). Opened
   straight from disk, the defaults are skipped.
 
+### Browsers and HOTAS buttons
+
+- **Chrome (and Edge) report at most 32 buttons per controller.** vJoy
+  buttons above 32 never reach the page, so they can't flash or be found
+  with *Press a HOTAS button*. With a Gremlin modifier layer that sends
+  buttons to vJoy 41 and up, the modifier layer is invisible in Chrome;
+  the cards still show those bindings, marked `[M]`.
+- **Firefox** has no 32-button limit, but only gives pages access to
+  controllers over `https://` (or `http://localhost`); opened from disk or
+  over plain `http://` it reports no controllers at all. If controllers
+  still don't show, check in `about:config` that `dom.gamepad.enabled` is
+  true, and try with privacy-hardening options (such as
+  `privacy.resistFingerprinting`) switched off.
+- Every browser only reports a controller after a button on it is pressed
+  while the page has focus.
+- The **Controllers** line under the file list shows what the browser
+  actually reports: each device, its number of buttons and axes, and what is
+  pressed right now. If a button never appears there, the page can't see it.
+
 ## Project layout
 
 ```
