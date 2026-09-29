@@ -16,8 +16,10 @@ your HOTAS.
   *Options › Keybindings* page it is on in the game. Click a result to jump to
   that card on the chart. Searches understand everyday words (boost →
   afterburner, flares → decoys, landing gear → landing system).
-- **Press a HOTAS button on a chart page** and its card and leader line
-  flash yellow for 3 seconds. Uses the browser's controller support, which
+- **Press a HOTAS button, push a hat or move an axis on a chart page** and
+  its card and leader line flash yellow for 3 seconds; a moved axis also
+  gets a live position bar (−100% … +100%) in its card header. Axes react
+  only to a clear movement (20% of travel), not to jitter. Uses the browser's controller support, which
   counts buttons from 1 like the game does; the stick or throttle is matched
   by name. With Joystick Gremlin running, the browser usually sees only
   Gremlin's vJoy devices; a vJoy button is then traced back through the

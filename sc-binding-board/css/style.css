@@ -198,3 +198,10 @@ tr.ghost td{color:var(--diff)!important;text-decoration:line-through;opacity:.8}
 .fchip.diff .finp,.fchip.diff kbd{color:var(--diff)}
 .fileline.cmp .kindlbl,.fileline.cmp strong{color:var(--diff)}
 .fileline.cmp label{display:inline-flex;align-items:center;gap:4px;text-decoration:none}
+
+/* ---------- live axis bar (card header) ---------- */
+.axbar{position:relative;display:inline-block;width:92px;height:12px;border:1px solid var(--line-2);border-radius:2px;background:var(--ground);overflow:hidden;flex:none}
+.axbar::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--dim)}
+.axfill{position:absolute;top:0;bottom:0;left:50%;width:0;background:var(--flash)}
+.axval{position:absolute;inset:0;font-family:var(--f-mono);font-size:9px;line-height:11px;text-align:right;padding-right:3px;color:var(--text);mix-blend-mode:difference}
+.card li.flash{background:rgba(255,210,31,.14)}

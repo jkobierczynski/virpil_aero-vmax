@@ -420,8 +420,8 @@ function mergeGremlin(devices, bindings, sc, gr, vjoyRev){
       const node = en.kind + en.id;
       const ttsDone = new Set();
       for (const o of entryOutputs(en, gd)){
-        if (o.kind === "button" && o.vjoy && vjoyRev){
-          const k = o.vjoy + "|button" + o.id;
+        if ((o.kind === "button" || o.kind === "axis" || o.kind === "hat") && o.vjoy && vjoyRev){
+          const k = o.vjoy + "|" + o.kind + o.id;
           (vjoyRev[k] || (vjoyRev[k] = [])).push({dev:id, node, layer:en.layer});
         }
         const pre = [];
@@ -705,7 +705,7 @@ let padRaf = 0, padPrev = {};
 const normName = s => (s||"").toLowerCase().replace(/\(.*?\)/g,"").replace(/[^a-z0-9]/g,"");
 function startPad(){
   if (!navigator.getGamepads){ setHint("This browser can’t read game controllers here. Search for the button instead, for example js2 button 5."); listen = null; return; }
-  setHint("Press a button on your stick or throttle. If nothing happens, press any button once so the browser notices the device.");
+  setHint("Press a button, push a hat or move an axis on your stick or throttle. If nothing happens, press any button once so the browser notices the device.");
 }
 /* One controller poller for the whole page: on the Find page (while listening) a press shows what the
    button does; on a chart page it flashes that button's card and leader line. */
@@ -718,7 +718,9 @@ function padTick(){
     const was = padPrev[p.index] || [];
     p.buttons.forEach((b,i) => { if (b.pressed && !was[i]) padPress(p, i+1); });
     padPrev[p.index] = p.buttons.map(b => b.pressed);
+    padAxes(p);
   }
+  updateAxisBars();
   padRaf = requestAnimationFrame(padTick);
 }
 function padPress(pad, n){
@@ -741,11 +743,15 @@ function sameDevice(pad, dev){
   const pn = normName(pad.id), dn = normName(dev.product || dev.title);
   return !!dn && (pn.includes(dn.slice(0,12)) || dn.includes(pn.slice(0,12)));
 }
-function padTargets(pad, n){
-  const node = "button" + n;
+/* kind is "button", "axis" or "hat"; n counts from 1. Gremlin names inputs axis1…, hat1…; the game names
+   axes x, y, z, rotx, roty, rotz, slider1, slider2 and hats hat1…. */
+const gameNode = (kind, n) => kind === "axis" ? (VAXES[n] || "axis" + n) : kind + n;
+function padTargets(pad, n, kind = "button"){
+  const node = kind + n, gnode = gameNode(kind, n);
+  const nodeFor = dev => /^g\d/.test(dev) ? node : gnode;
   if (!/vjoy/i.test(pad.id)){
     const devs = Object.values(S.data.devices).filter(d => /^(js|g)\d/.test(d.id) && !/vjoy/i.test(d.product || "") && sameDevice(pad, d));
-    return {label: `${padName(pad)} button ${n}`, sets: [devs.map(d => ({dev:d.id, node}))], physical:true};
+    return {label: `${padName(pad)} ${kind} ${n}`, sets: [devs.map(d => ({dev:d.id, node:nodeFor(d.id)}))], physical:true};
   }
   let vpads = [];
   try { vpads = [...navigator.getGamepads()].filter(p => p && /vjoy/i.test(p.id)).sort((a,b) => a.index - b.index); } catch {}
@@ -756,34 +762,112 @@ function padTargets(pad, n){
   const sets = order.map(v => {
     const t = (S.data.vjoyRev && S.data.vjoyRev[v + "|" + node] || []).slice().sort((a,b) => (a.layer||0) - (b.layer||0));
     const js = S.vmap[v] || ("js" + v);
-    if (S.data.devices[js]) t.push({dev:js, node});
+    if (S.data.devices[js]) t.push({dev:js, node:gnode});
     return t;
   });
-  return {label: `vJoy ${guess} button ${n}`, sets};
+  return {label: `vJoy ${guess} ${kind} ${n}`, sets};
 }
 
 /* chart pages: flash the pressed control's card and leader line in yellow for 3 seconds */
 function flashButton(pad, n){
   if (!board) return;
-  const {label, sets, physical} = padTargets(pad, n);
+  const keys = flashInput(pad, n, "button");
+  if (keys && /vjoy/i.test(pad.id) && !vjoyHinted){ vjoyHinted = true;
+    toast(`vJoy button ${n} → ${keys.map(k => board.cards[k].part.dev.title + " " + prettyKey(k.replace(/^[LR]:/,""))).join(", ")}. Wrong hand? Use “swap vJoy order” under the file list.`, false, HOTAS_TOAST_MS); }
+}
+/* Axes and hats. The browser lists axes in HID order (X, Y, Z, Rx, Ry, Rz, slider, dial), which is how the
+   game and Gremlin number them too. A hat is reported as one extra axis that rests above +1 and encodes the
+   eight directions in steps of 2/7 from −1 (up) clockwise. An axis counts as moved when it travels 20% of
+   its range from where it was last noticed, so a throttle parked halfway or a jittery twist axis is quiet. */
+const AXIS_MOVE = 0.4;        // 20% of the −1…+1 range
+const HAT_DIRS = ["up", "up-right", "right", "down-right", "down", "down-left", "left", "up-left"];
+const axisState = {};         // pad.index -> {anchor:[], last:[], hatIdx:{axis→hat number}, when:[]}
+const liveAxes = new Map();   // "padIndex|axisIndex" -> {pad index, axis index, targets}
+function hatDir(v){
+  if (v > 1.05 || v < -1.05) return null;                       // neutral
+  const i = Math.round((v + 1) * 3.5); return HAT_DIRS[((i % 8) + 8) % 8];
+}
+function padAxes(p){
+  const st = axisState[p.index] || (axisState[p.index] = {anchor:[], hat:{}, lastDir:{}, when:[]});
+  let hats = 0;
+  p.axes.forEach((v, i) => {
+    if (st.anchor[i] === undefined){ st.anchor[i] = v; if (v > 1.05) st.hat[i] = true; return; }
+    if (v > 1.05 && !st.hat[i] && Math.abs(st.anchor[i]) > 1.05) st.hat[i] = true;
+    if (st.hat[i]){
+      hats++;
+      const dir = hatDir(v), was = st.lastDir[i];
+      st.lastDir[i] = dir;
+      if (dir && dir !== was) padHat(p, hats, dir);
+      return;
+    }
+    if (Math.abs(v - st.anchor[i]) >= AXIS_MOVE){
+      st.anchor[i] = v;
+      const now = performance.now();
+      if (!st.when[i] || now - st.when[i] > 600){ st.when[i] = now; padAxis(p, i + 1, i); }
+    }
+  });
+}
+function padAxis(pad, n, i){
+  if (S.tab === "find"){ if (listen === "pad") onPadInput(pad, n, "axis"); return; }
+  if (!board) return;
+  const keys = flashInput(pad, n, "axis");
+  if (keys && keys.length) liveAxes.set(pad.index + "|" + i, {pad:pad.index, axis:i, keys});
+}
+function padHat(pad, n, dir){
+  if (S.tab === "find"){ if (listen === "pad") onPadInput(pad, n, "hat", dir); return; }
+  if (board) flashInput(pad, n, "hat", dir);
+}
+/* live position bar in the header of every axis card that has been moved */
+function updateAxisBars(){
+  if (!board || !liveAxes.size) return;
+  let pads = null;
+  for (const la of liveAxes.values()){
+    for (const k of la.keys){
+      const c = board.cards[k]; if (!c) continue;
+      if (!pads){ try { pads = navigator.getGamepads(); } catch { return; } }
+      const p = pads[la.pad]; if (!p) continue;
+      const v = p.axes[la.axis]; if (v === undefined) continue;
+      let bar = c.el.querySelector(".axbar");
+      if (!bar){
+        bar = el("span",{class:"axbar", title:"Live axis position (−100% … +100%)"}, el("span",{class:"axfill"}), el("span",{class:"axval"}));
+        const kind = c.el.querySelector(".card-h .kind"); if (kind) kind.replaceWith(bar); else c.el.querySelector(".card-h").append(bar);
+      }
+      const pct = Math.max(-1, Math.min(1, v));
+      const fill = bar.firstChild;
+      fill.style.left = (pct < 0 ? (50 + pct * 50) : 50) + "%";
+      fill.style.width = Math.abs(pct * 50) + "%";
+      bar.lastChild.textContent = (pct > 0 ? "+" : "") + Math.round(pct * 100) + "%";
+    }
+  }
+}
+/* flash whatever on this page the input drives; returns the card keys (or null) */
+function flashInput(pad, n, kind, dir){
+  const {label, sets, physical} = padTargets(pad, n, kind);
   const onPage = set => [...new Set(set.flatMap(t => board.parts.filter(p => p.dev.id === t.dev).map(p => p.prefix + t.node)))]
     .filter(k => board.cards[k] && !board.cards[k].el.hidden);
-  for (const set of sets){ const keys = onPage(set); if (keys.length){
-    flashCards(keys);
-    if (/vjoy/i.test(pad.id) && !vjoyHinted){ vjoyHinted = true;
-      toast(`${label} → ${keys.map(k => board.cards[k].part.dev.title + " " + prettyKey(k.replace(/^[LR]:/,""))).join(", ")}. Wrong hand? Use “swap vJoy order” under the file list.`, false, HOTAS_TOAST_MS); }
-    return; } }
-  if (physical){
-    // A physical device the page doesn't know by name: with one physical device shown, assume it's that one.
+  let keys = null;
+  for (const set of sets){ const k = onPage(set); if (k.length){ keys = k; break; } }
+  if (!keys && physical){
     const phys = board.parts.filter(p => !/vjoy/i.test(p.dev.product || ""));
-    if (phys.length === 1){ const k = phys[0].prefix + "button" + n; if (board.cards[k] && !board.cards[k].el.hidden) return flashCards([k]); }
+    if (phys.length === 1){
+      const node = /^g\d/.test(phys[0].dev.id) ? kind + n : gameNode(kind, n), k = phys[0].prefix + node;
+      if (board.cards[k] && !board.cards[k].el.hidden) keys = [k];
+    }
   }
-  toast(`${label}: nothing on this page uses it.` + (/vjoy/i.test(pad.id) && !S.gr ? " Load your Joystick Gremlin profile to trace vJoy buttons back to your stick." : ""), false, HOTAS_TOAST_MS);
+  if (!keys){
+    if (kind !== "axis") toast(`${label}${dir ? " " + dir : ""}: nothing on this page uses it.`, false, HOTAS_TOAST_MS);
+    return null;
+  }
+  flashCards(keys, dir);
+  return keys;
 }
-function flashCards(keys){
+function flashCards(keys, dir){
   clearFlash();
   board.flash = new Set(keys);
-  for (const k of keys) board.cards[k].el.classList.add("flash");
+  for (const k of keys){
+    board.cards[k].el.classList.add("flash");
+    if (dir){ const d = dir.split("-"); board.cards[k].el.querySelectorAll("li").forEach(li => { if (li._b && d.includes(li._b.dir)) li.classList.add("flash"); }); }
+  }
   board.svg.querySelectorAll("[data-card]").forEach(e => { if (board.flash.has(e.dataset.card)) e.classList.add("flash"); });
   const first = board.cards[keys[0]].el;
   const r = first.getBoundingClientRect();
@@ -796,14 +880,16 @@ function clearFlash(){
   board.flash = null;
   board.stage.querySelectorAll(".flash").forEach(e => e.classList.remove("flash"));
 }
-function onPadButton(pad, n){
-  const {label, sets} = padTargets(pad, n);
+function onPadButton(pad, n){ onPadInput(pad, n, "button"); }
+function onPadInput(pad, n, kind, dir){
+  const {label: base, sets} = padTargets(pad, n, kind);
+  const label = base + (dir ? " " + dir : "");
   const hitSet = set => { const want = new Set(set.map(t => t.dev + "|" + t.node));
-    return S.data.bindings.filter(b => want.has(b.dev + "|" + b.node)); };
+    return S.data.bindings.filter(b => want.has(b.dev + "|" + b.node) && (!dir || !b.dir || dir.split("-").includes(b.dir))); };
   let found = [];
   for (const set of sets){ found = hitSet(set); if (found.length) break; }
   hits = new Set(found);
-  setHint(label + (found.length ? "" : " isn’t used by any binding") + ". Click the button again to stop.");
+  setHint(label + (found.length ? "" : " isn’t used by any binding") + ". Click “Press a HOTAS button” again to stop.");
   renderFindResults();
 }
 
@@ -1110,7 +1196,7 @@ function hint(v, where, extra){
   v.append(el("p",{class:"hint"}, S.arrange
     ? [el("b",{},"Arranging: "), `drag cards to move them; drag a card’s orange pin onto the physical button to draw a leader line; double-click a pin to detach it. Auto-arrange puts every pinned card beside the picture near its button. Positions are saved for ${where}.`]
     : ["Hover a line for the raw action name. Press ", el("b",{},"Arrange"), " to move cards and pin them to buttons.",
-       navigator.getGamepads ? " Press a button on your stick or throttle to flash its card." : "", extra ? " " + extra : ""]));
+       navigator.getGamepads ? " Press a button, push a hat or move an axis on your stick or throttle to flash its card; moved axes show a live position bar." : "", extra ? " " + extra : ""]));
 }
 
 function mountBoard(v, spec){
