@@ -397,7 +397,7 @@ function entryOutputs(entry, gdev){
   }
   return outs;
 }
-function mergeGremlin(devices, bindings, sc, gr, vjoyRev){
+function mergeGremlin(devices, bindings, sc, gr, vjoyRev, modPairs){
   const scIndex = new Map();
   for (const b of (sc ? sc.bindings : [])){
     const k = b.dev + "|" + b.node;
@@ -406,6 +406,7 @@ function mergeGremlin(devices, bindings, sc, gr, vjoyRev){
   }
   gr.devices.forEach((gd, gi) => {
     const id = "g" + (gi+1);
+    const baseOut = {}, modOut = {};   // physical button -> vJoy buttons it sends, normally and in the modifier layer
     const dev = {id, product: gd.name, title: gd.name, generic: gd.name, physical:true, bindings:[]};
     const seen = new Set(), baseSeen = new Set();
     const push = b => {
@@ -420,6 +421,10 @@ function mergeGremlin(devices, bindings, sc, gr, vjoyRev){
       const node = en.kind + en.id;
       const ttsDone = new Set();
       for (const o of entryOutputs(en, gd)){
+        if (o.kind === "button" && o.vjoy && !o.note && en.kind === "button" && (en.layer === 0 || en.layer === 1)){
+          const bag = en.layer === 0 ? baseOut : modOut;
+          (bag[node] || (bag[node] = [])).push({v:o.vjoy, id:+o.id});
+        }
         if ((o.kind === "button" || o.kind === "axis" || o.kind === "hat") && o.vjoy && vjoyRev){
           const k = o.vjoy + "|" + o.kind + o.id;
           (vjoyRev[k] || (vjoyRev[k] = [])).push({dev:id, node, layer:en.layer});
@@ -462,6 +467,15 @@ function mergeGremlin(devices, bindings, sc, gr, vjoyRev){
       }
     }
     if (dev.bindings.length) devices[id] = dev;
+    // A physical button that sends vJoy button a normally and b in the modifier layer: b is a's modifier twin.
+    if (modPairs) for (const [node, mods] of Object.entries(modOut)){
+      for (const m of mods){
+        const b0 = (baseOut[node] || []).find(o => o.v === m.v);
+        if (!b0 || b0.id === m.id) continue;
+        const k = m.v + "|" + m.id;
+        if (modPairs.has(k) && modPairs.get(k) !== b0.id) modPairs.set(k, null); else modPairs.set(k, b0.id);
+      }
+    }
   });
 }
 function buildData(){
@@ -472,8 +486,11 @@ function buildData(){
     devices[k] = Object.assign({}, d, vj ? {generic: d.generic + " · vJoy"} : {});
     bindings.push(...d.bindings);
   }
-  const vjoyRev = {};
-  if (S.gr) mergeGremlin(devices, bindings, S.sc, S.gr, vjoyRev);
+  const vjoyRev = {}, rawPairs = new Map();
+  if (S.gr) mergeGremlin(devices, bindings, S.sc, S.gr, vjoyRev, rawPairs);
+  MODPAIRS = new Map();
+  for (const [k, a] of rawPairs){ if (a == null) continue;
+    const [v, b] = k.split("|"); MODPAIRS.set((S.vmap[v] || "js" + v) + "|button" + b, "button" + a); }
   assignLayoutKeys(devices);
   const data = {profileName: S.sc ? S.sc.profileName : "Gremlin profile", devices, bindings, vjoyRev};
   applyCompare(data);
@@ -843,16 +860,25 @@ function updateAxisBars(){
 /* flash whatever on this page the input drives; returns the card keys (or null) */
 function flashInput(pad, n, kind, dir){
   const {label, sets, physical} = padTargets(pad, n, kind);
-  const onPage = set => [...new Set(set.flatMap(t => board.parts.filter(p => p.dev.id === t.dev).map(p => p.prefix + t.node)))]
-    .filter(k => board.cards[k] && !board.cards[k].el.hidden);
-  let keys = null;
-  for (const set of sets){ const k = onPage(set); if (k.length){ keys = k; break; } }
+  const onBoard = set => [...new Set(set.flatMap(t => board.parts.filter(p => p.dev.id === t.dev).map(p => p.prefix + dispNode(t.dev, t.node))))]
+    .filter(k => board.cards[k]);
+  let keys = null, hiddenKeys = null;
+  for (const set of sets){
+    if (!set.length) continue;                 // this vJoy number isn't wired to anything: try the next one
+    const all = onBoard(set), vis = all.filter(k => !board.cards[k].el.hidden);
+    if (vis.length) keys = vis; else if (all.length) hiddenKeys = all;
+    break;                                     // it is wired: never borrow another device's card
+  }
   if (!keys && physical){
     const phys = board.parts.filter(p => !/vjoy/i.test(p.dev.product || ""));
     if (phys.length === 1){
       const node = /^g\d/.test(phys[0].dev.id) ? kind + n : gameNode(kind, n), k = phys[0].prefix + node;
       if (board.cards[k] && !board.cards[k].el.hidden) keys = [k];
     }
+  }
+  if (!keys && hiddenKeys){
+    if (kind !== "axis") toast(`${label}${dir ? " " + dir : ""} → ${hiddenKeys.map(k => prettyKey(k.replace(/^[LR]:/,""))).join(", ")}, but that card is hidden by a category switch at the top (for example “Unbound”).`, false, HOTAS_TOAST_MS);
+    return null;
   }
   if (!keys){
     if (kind !== "axis") toast(`${label}${dir ? " " + dir : ""}: nothing on this page uses it.`, false, HOTAS_TOAST_MS);
@@ -887,12 +913,24 @@ function onPadInput(pad, n, kind, dir){
   const hitSet = set => { const want = new Set(set.map(t => t.dev + "|" + t.node));
     return S.data.bindings.filter(b => want.has(b.dev + "|" + b.node) && (!dir || !b.dir || dir.split("-").includes(b.dir))); };
   let found = [];
-  for (const set of sets){ found = hitSet(set); if (found.length) break; }
+  for (const set of sets){ if (!set.length) continue; found = hitSet(set); break; }
   hits = new Set(found);
   setHint(label + (found.length ? "" : " isn’t used by any binding") + ". Click “Press a HOTAS button” again to stop.");
   renderFindResults();
 }
 
+
+/* ------------------------------------------------------------ modifier layer on vJoy pages */
+/* With a Gremlin modifier layer that sends every button to a second vJoy button (your +40), the game's vJoy
+   device has two buttons for one physical button. On vJoy pages they are shown as one card: the modifier
+   button's lines join the base button's card, tagged [M]. The pairs come from the Gremlin profile itself. */
+let MODPAIRS = new Map();
+const modMerge = () => store.get("scbb.modMerge", true) !== false;
+function dispNode(dev, node){
+  if (!modMerge()) return node;
+  return MODPAIRS.get(dev + "|" + node) || node;
+}
+const asModLine = b => Object.assign({}, b, {pre:[...(b.pre||[]), "M"], layer:1, twin:b.node});
 
 /* ------------------------------------------------------------ compare with another bindings file */
 /* A game binding is "the same" when the other file binds the same action, in the same action map, to the
@@ -913,7 +951,8 @@ function applyCompare(data){
   const ghosts = new Map(), add = (dev, node, cb) => { const k = dev + "|" + node; if (!ghosts.has(k)) ghosts.set(k, []); ghosts.get(k).push(cb); };
   const vjoyOf = {}; for (const [v, js] of Object.entries(S.vmap)) vjoyOf[js] = v;
   for (const cb of data.cmpOnly){
-    add(cb.dev, cb.node, cb);
+    const dn = dispNode(cb.dev, cb.node);
+    add(cb.dev, dn, dn === cb.node ? cb : asModLine(cb));
     const v = vjoyOf[cb.dev] || (/^js\d+$/.test(cb.dev) ? cb.dev.slice(2) : null);
     for (const r of (v && data.vjoyRev && data.vjoyRev[v + "|" + cb.node]) || []) add(r.dev, r.node, cb);
   }
@@ -992,6 +1031,9 @@ function renderInfo(){
       vm.append(el("label",{}, `vJoy ${i} `, sel));
     }
     const swapped = !!store.get("scbb.vjoySwap", false);
+    if (MODPAIRS.size) vm.append(el("button",{class:"linkbtn", title:"Your Gremlin modifier layer sends each button to a second vJoy button. On vJoy pages those pairs can share one card.",
+      onclick:()=>{ store.set("scbb.modMerge", !modMerge()); rebuild(); }},
+      modMerge() ? `modifier layer (${MODPAIRS.size} vJoy buttons) shown on the base cards — show separately` : "modifier layer shown as separate cards — combine"));
     vm.append(el("button",{class:"linkbtn", title:"Your browser lists the vJoy devices without numbers. If pressing a button flashes the other hand, swap the order.",
       onclick:()=>{ store.set("scbb.vjoySwap", !swapped); renderInfo(); toast(!swapped ? "vJoy order swapped for HOTAS button presses" : "vJoy order back to normal"); }},
       swapped ? "HOTAS presses: vJoy order swapped (undo)" : "wrong hand flashing? swap vJoy order"));
@@ -1101,9 +1143,10 @@ let board = null;
 
 function groupNodes(dev){
   const g = new Map();
-  for (const b of dev.bindings){
-    if (!g.has(b.node)) g.set(b.node, []);
-    g.get(b.node).push(b);
+  for (const b0 of dev.bindings){
+    const node = dispNode(dev.id, b0.node), b = node === b0.node ? b0 : asModLine(b0);
+    if (!g.has(node)) g.set(node, []);
+    g.get(node).push(b);
   }
   for (const list of g.values()) list.sort((a,b)=> (DIR_ORDER[a.dir]-DIR_ORDER[b.dir]) || ((a.layer||0)-(b.layer||0)) || ((a.pre||[]).join().localeCompare((b.pre||[]).join())) || (CAT_ORDER[a.cat]-CAT_ORDER[b.cat]) || (TAG_ORDER[a.tag]??9)-(TAG_ORDER[b.tag]??9) || a.mods.length-b.mods.length);
   const kindRank = {button:0, hat:1, axis:2, key:3};
@@ -1133,8 +1176,10 @@ function cardFor(key, node, list, ghosts){
     ul.append(li);
   }
   const anyDiff = list.some(b => b.diff) || (ghosts && ghosts.length);
+  const twins = [...new Set(list.map(b => b.twin).filter(Boolean))];
   return el("div",{class:"card" + (anyDiff ? " hasdiff" : ""), "data-node":key},
-    el("div",{class:"card-h"}, el("span",{class:"inp"}, prettyKey(node)), el("span",{class:"kind"}, kind === "key" ? "" : kind)),
+    el("div",{class:"card-h"}, el("span",{class:"inp"}, prettyKey(node)),
+      el("span",{class:"kind", title: twins.length ? "Modifier layer: " + twins.map(prettyKey).join(", ") : ""}, kind === "key" ? "" : kind + (twins.length ? " · [M] " + twins.map(t => t.replace("button","")).join(",") : ""))),
     ul);
 }
 

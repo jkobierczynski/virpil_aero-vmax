@@ -61,6 +61,12 @@ is matched to the game's `js1`, vJoy 2 to `js2`, and so on.
 | `[LP]` | Long press (game) |
 | `[M·RALT]` | Game binding with a keyboard modifier |
 | `[M]` | Gremlin modifier layer (a mode reached with a temporary mode switch) |
+
+On the vJoy pages, a Gremlin modifier layer that sends each button to a second
+vJoy button (for example button 16 → 56) is shown on one card: the second
+button's bindings join the first button's card, tagged `[M]`, and the card
+header says `[M] 56`. The pairs are read from the Gremlin profile. Use the link
+in the *vJoy → game* row to show them as separate cards again.
 | `[NAV]`, `[AUX]`, … | Other Gremlin modes (only shown where they differ from the base mode) |
 | `[REL]` / `[MACRO]` | Fired by a Gremlin macro, on release / on press |
 
