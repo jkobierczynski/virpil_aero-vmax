@@ -387,475 +387,6 @@
     }
    }
   },
-  "vjoy device#js1": {
-   "cards": {},
-   "preset": "none",
-   "mirror": false
-  },
-  "vjoy device#js2": {
-   "cards": {},
-   "preset": "none",
-   "mirror": false
-  },
-  "both|vjoy device#js1|vjoy device#js2": {
-   "cards": {
-    "L:button1": {
-     "auto": true,
-     "x": 16,
-     "y": 86
-    },
-    "L:button2": {
-     "auto": true,
-     "x": 242,
-     "y": 86
-    },
-    "L:button4": {
-     "auto": true,
-     "x": 242,
-     "y": 86
-    },
-    "L:button5": {
-     "auto": true,
-     "x": 468,
-     "y": 86
-    },
-    "L:button6": {
-     "auto": true,
-     "x": 694,
-     "y": 86
-    },
-    "L:button7": {
-     "auto": true,
-     "x": 920,
-     "y": 86
-    },
-    "L:button8": {
-     "auto": true,
-     "x": 468,
-     "y": 144
-    },
-    "L:button9": {
-     "auto": true,
-     "x": 16,
-     "y": 176
-    },
-    "L:button10": {
-     "auto": true,
-     "x": 920,
-     "y": 176
-    },
-    "L:button11": {
-     "auto": true,
-     "x": 242,
-     "y": 193
-    },
-    "L:button12": {
-     "auto": true,
-     "x": 694,
-     "y": 209
-    },
-    "L:button13": {
-     "auto": true,
-     "x": 468,
-     "y": 218
-    },
-    "L:button14": {
-     "auto": true,
-     "x": 920,
-     "y": 234
-    },
-    "L:button15": {
-     "auto": true,
-     "x": 16,
-     "y": 266
-    },
-    "L:button16": {
-     "auto": true,
-     "x": 242,
-     "y": 267
-    },
-    "L:button17": {
-     "auto": true,
-     "x": 694,
-     "y": 267
-    },
-    "L:button18": {
-     "auto": true,
-     "x": 468,
-     "y": 276
-    },
-    "L:button19": {
-     "auto": true,
-     "x": 920,
-     "y": 324
-    },
-    "L:button20": {
-     "auto": true,
-     "x": 468,
-     "y": 334
-    },
-    "L:button21": {
-     "auto": true,
-     "x": 242,
-     "y": 341
-    },
-    "L:button22": {
-     "auto": true,
-     "x": 694,
-     "y": 341
-    },
-    "L:button23": {
-     "auto": true,
-     "x": 16,
-     "y": 373
-    },
-    "L:button42": {
-     "auto": true,
-     "x": 694,
-     "y": 399
-    },
-    "L:button46": {
-     "auto": true,
-     "x": 920,
-     "y": 414
-    },
-    "L:button47": {
-     "auto": true,
-     "x": 468,
-     "y": 424
-    },
-    "L:button48": {
-     "auto": true,
-     "x": 16,
-     "y": 431
-    },
-    "L:button50": {
-     "auto": true,
-     "x": 242,
-     "y": 457
-    },
-    "L:button51": {
-     "auto": true,
-     "x": 694,
-     "y": 473
-    },
-    "L:button52": {
-     "auto": true,
-     "x": 920,
-     "y": 472
-    },
-    "L:button53": {
-     "auto": true,
-     "x": 468,
-     "y": 482
-    },
-    "L:button54": {
-     "auto": true,
-     "x": 16,
-     "y": 489
-    },
-    "L:button56": {
-     "auto": true,
-     "x": 242,
-     "y": 515
-    },
-    "L:button57": {
-     "auto": true,
-     "x": 694,
-     "y": 531
-    },
-    "L:button58": {
-     "auto": true,
-     "x": 920,
-     "y": 530
-    },
-    "L:button59": {
-     "auto": true,
-     "x": 920,
-     "y": 549
-    },
-    "L:button60": {
-     "auto": true,
-     "x": 468,
-     "y": 540
-    },
-    "L:button123": {
-     "auto": true,
-     "x": 16,
-     "y": 563
-    },
-    "L:rotx": {
-     "auto": true,
-     "x": 242,
-     "y": 573
-    },
-    "L:roty": {
-     "auto": true,
-     "x": 694,
-     "y": 589
-    },
-    "L:rotz": {
-     "auto": true,
-     "x": 16,
-     "y": 621
-    },
-    "L:x": {
-     "auto": true,
-     "x": 242,
-     "y": 647
-    },
-    "L:y": {
-     "auto": true,
-     "x": 468,
-     "y": 647
-    },
-    "L:slider1": {
-     "auto": true,
-     "x": 694,
-     "y": 679
-    },
-    "L:slider2": {
-     "auto": true,
-     "x": 16,
-     "y": 711
-    },
-    "R:button1": {
-     "auto": true,
-     "x": 1236,
-     "y": 86
-    },
-    "R:button2": {
-     "auto": true,
-     "x": 1462,
-     "y": 86
-    },
-    "R:button3": {
-     "auto": true,
-     "x": 1688,
-     "y": 86
-    },
-    "R:button5": {
-     "auto": true,
-     "x": 1914,
-     "y": 86
-    },
-    "R:button6": {
-     "auto": true,
-     "x": 2140,
-     "y": 86
-    },
-    "R:button7": {
-     "auto": true,
-     "x": 2140,
-     "y": 86
-    },
-    "R:button8": {
-     "auto": true,
-     "x": 1688,
-     "y": 144
-    },
-    "R:button9": {
-     "auto": true,
-     "x": 1462,
-     "y": 160
-    },
-    "R:button10": {
-     "auto": true,
-     "x": 1914,
-     "y": 160
-    },
-    "R:button11": {
-     "auto": true,
-     "x": 2140,
-     "y": 160
-    },
-    "R:button12": {
-     "auto": true,
-     "x": 1236,
-     "y": 193
-    },
-    "R:button13": {
-     "auto": true,
-     "x": 1688,
-     "y": 202
-    },
-    "R:button14": {
-     "auto": true,
-     "x": 1462,
-     "y": 218
-    },
-    "R:button16": {
-     "auto": true,
-     "x": 1914,
-     "y": 218
-    },
-    "R:button17": {
-     "auto": true,
-     "x": 2140,
-     "y": 218
-    },
-    "R:button18": {
-     "auto": true,
-     "x": 1236,
-     "y": 267
-    },
-    "R:button19": {
-     "auto": true,
-     "x": 1462,
-     "y": 276
-    },
-    "R:button20": {
-     "auto": true,
-     "x": 1688,
-     "y": 292
-    },
-    "R:button21": {
-     "auto": true,
-     "x": 1914,
-     "y": 308
-    },
-    "R:button22": {
-     "auto": true,
-     "x": 2140,
-     "y": 308
-    },
-    "R:button23": {
-     "auto": true,
-     "x": 1462,
-     "y": 350
-    },
-    "R:button24": {
-     "auto": true,
-     "x": 1236,
-     "y": 357
-    },
-    "R:button37": {
-     "auto": true,
-     "x": 1688,
-     "y": 399
-    },
-    "R:button38": {
-     "auto": true,
-     "x": 1914,
-     "y": 398
-    },
-    "R:button39": {
-     "auto": true,
-     "x": 2140,
-     "y": 431
-    },
-    "R:button40": {
-     "auto": true,
-     "x": 1688,
-     "y": 457
-    },
-    "R:button41": {
-     "auto": true,
-     "x": 1236,
-     "y": 482
-    },
-    "R:button45": {
-     "auto": true,
-     "x": 1914,
-     "y": 492
-    },
-    "R:button48": {
-     "auto": true,
-     "x": 1914,
-     "y": 472
-    },
-    "R:button49": {
-     "auto": true,
-     "x": 1236,
-     "y": 480
-    },
-    "R:button51": {
-     "auto": true,
-     "x": 1462,
-     "y": 505
-    },
-    "R:button52": {
-     "auto": true,
-     "x": 2140,
-     "y": 505
-    },
-    "R:button56": {
-     "auto": true,
-     "x": 1688,
-     "y": 531
-    },
-    "R:button57": {
-     "auto": true,
-     "x": 1914,
-     "y": 530
-    },
-    "R:button58": {
-     "auto": true,
-     "x": 1236,
-     "y": 538
-    },
-    "R:button59": {
-     "auto": true,
-     "x": 1462,
-     "y": 563
-    },
-    "R:button62": {
-     "auto": true,
-     "x": 1688,
-     "y": 621
-    },
-    "R:button63": {
-     "auto": true,
-     "x": 1914,
-     "y": 620
-    },
-    "R:button64": {
-     "auto": true,
-     "x": 1236,
-     "y": 628
-    },
-    "R:button81": {
-     "auto": true,
-     "x": 2140,
-     "y": 670
-    },
-    "R:x": {
-     "auto": true,
-     "x": 1462,
-     "y": 679
-    },
-    "R:y": {
-     "auto": true,
-     "x": 1688,
-     "y": 679
-    },
-    "R:z": {
-     "auto": true,
-     "x": 1236,
-     "y": 686
-    },
-    "L:button24": {
-     "auto": true,
-     "x": 242,
-     "y": 399
-    },
-    "L:z": {
-     "auto": true,
-     "x": 920,
-     "y": 653
-    },
-    "R:button60": {
-     "auto": true,
-     "x": 2140,
-     "y": 612
-    },
-    "R:button61": {
-     "auto": true,
-     "x": 1462,
-     "y": 621
-    }
-   }
-  },
   "vpc cdt-vmax throttle": {
    "cards": {
     "button1": {
@@ -2262,6 +1793,475 @@
     }
    }
   },
+  "vjoy device#js1": {
+   "cards": {},
+   "preset": "none",
+   "mirror": false
+  },
+  "vjoy device#js2": {
+   "cards": {},
+   "preset": "none",
+   "mirror": false
+  },
+  "both|vjoy device#js1|vjoy device#js2": {
+   "cards": {
+    "L:button1": {
+     "auto": true,
+     "x": 16,
+     "y": 86
+    },
+    "L:button2": {
+     "auto": true,
+     "x": 242,
+     "y": 86
+    },
+    "L:button4": {
+     "auto": true,
+     "x": 242,
+     "y": 86
+    },
+    "L:button5": {
+     "auto": true,
+     "x": 468,
+     "y": 86
+    },
+    "L:button6": {
+     "auto": true,
+     "x": 694,
+     "y": 86
+    },
+    "L:button7": {
+     "auto": true,
+     "x": 920,
+     "y": 86
+    },
+    "L:button8": {
+     "auto": true,
+     "x": 468,
+     "y": 145
+    },
+    "L:button9": {
+     "auto": true,
+     "x": 16,
+     "y": 177
+    },
+    "L:button10": {
+     "auto": true,
+     "x": 920,
+     "y": 177
+    },
+    "L:button11": {
+     "auto": true,
+     "x": 242,
+     "y": 193
+    },
+    "L:button12": {
+     "auto": true,
+     "x": 694,
+     "y": 209
+    },
+    "L:button13": {
+     "auto": true,
+     "x": 468,
+     "y": 220
+    },
+    "L:button14": {
+     "auto": true,
+     "x": 920,
+     "y": 236
+    },
+    "L:button15": {
+     "auto": true,
+     "x": 16,
+     "y": 268
+    },
+    "L:button16": {
+     "auto": true,
+     "x": 242,
+     "y": 268
+    },
+    "L:button17": {
+     "auto": true,
+     "x": 694,
+     "y": 268
+    },
+    "L:button18": {
+     "auto": true,
+     "x": 468,
+     "y": 279
+    },
+    "L:button19": {
+     "auto": true,
+     "x": 920,
+     "y": 327
+    },
+    "L:button20": {
+     "auto": true,
+     "x": 468,
+     "y": 338
+    },
+    "L:button21": {
+     "auto": true,
+     "x": 242,
+     "y": 343
+    },
+    "L:button22": {
+     "auto": true,
+     "x": 694,
+     "y": 343
+    },
+    "L:button23": {
+     "auto": true,
+     "x": 16,
+     "y": 375
+    },
+    "L:button42": {
+     "auto": true,
+     "x": 694,
+     "y": 402
+    },
+    "L:button46": {
+     "auto": true,
+     "x": 920,
+     "y": 418
+    },
+    "L:button47": {
+     "auto": true,
+     "x": 468,
+     "y": 429
+    },
+    "L:button48": {
+     "auto": true,
+     "x": 16,
+     "y": 434
+    },
+    "L:button50": {
+     "auto": true,
+     "x": 242,
+     "y": 461
+    },
+    "L:button51": {
+     "auto": true,
+     "x": 694,
+     "y": 477
+    },
+    "L:button52": {
+     "auto": true,
+     "x": 920,
+     "y": 477
+    },
+    "L:button53": {
+     "auto": true,
+     "x": 468,
+     "y": 488
+    },
+    "L:button54": {
+     "auto": true,
+     "x": 16,
+     "y": 493
+    },
+    "L:button56": {
+     "auto": true,
+     "x": 242,
+     "y": 520
+    },
+    "L:button57": {
+     "auto": true,
+     "x": 694,
+     "y": 536
+    },
+    "L:button58": {
+     "auto": true,
+     "x": 920,
+     "y": 536
+    },
+    "L:button59": {
+     "auto": true,
+     "x": 920,
+     "y": 549
+    },
+    "L:button60": {
+     "auto": true,
+     "x": 468,
+     "y": 547
+    },
+    "L:button123": {
+     "auto": true,
+     "x": 16,
+     "y": 568
+    },
+    "L:rotx": {
+     "auto": true,
+     "x": 242,
+     "y": 579
+    },
+    "L:roty": {
+     "auto": true,
+     "x": 694,
+     "y": 595
+    },
+    "L:rotz": {
+     "auto": true,
+     "x": 16,
+     "y": 627
+    },
+    "L:x": {
+     "auto": true,
+     "x": 242,
+     "y": 654
+    },
+    "L:y": {
+     "auto": true,
+     "x": 468,
+     "y": 654
+    },
+    "L:slider1": {
+     "auto": true,
+     "x": 694,
+     "y": 686
+    },
+    "L:slider2": {
+     "auto": true,
+     "x": 16,
+     "y": 718
+    },
+    "R:button1": {
+     "auto": true,
+     "x": 1236,
+     "y": 86
+    },
+    "R:button2": {
+     "auto": true,
+     "x": 1462,
+     "y": 86
+    },
+    "R:button3": {
+     "auto": true,
+     "x": 1688,
+     "y": 86
+    },
+    "R:button5": {
+     "auto": true,
+     "x": 1914,
+     "y": 86
+    },
+    "R:button6": {
+     "auto": true,
+     "x": 2140,
+     "y": 86
+    },
+    "R:button7": {
+     "auto": true,
+     "x": 2140,
+     "y": 86
+    },
+    "R:button8": {
+     "auto": true,
+     "x": 1688,
+     "y": 145
+    },
+    "R:button9": {
+     "auto": true,
+     "x": 1462,
+     "y": 161
+    },
+    "R:button10": {
+     "auto": true,
+     "x": 1914,
+     "y": 161
+    },
+    "R:button11": {
+     "auto": true,
+     "x": 2140,
+     "y": 161
+    },
+    "R:button12": {
+     "auto": true,
+     "x": 1236,
+     "y": 193
+    },
+    "R:button13": {
+     "auto": true,
+     "x": 1688,
+     "y": 204
+    },
+    "R:button14": {
+     "auto": true,
+     "x": 1462,
+     "y": 220
+    },
+    "R:button16": {
+     "auto": true,
+     "x": 1914,
+     "y": 220
+    },
+    "R:button17": {
+     "auto": true,
+     "x": 2140,
+     "y": 220
+    },
+    "R:button18": {
+     "auto": true,
+     "x": 1236,
+     "y": 268
+    },
+    "R:button19": {
+     "auto": true,
+     "x": 1462,
+     "y": 279
+    },
+    "R:button20": {
+     "auto": true,
+     "x": 1688,
+     "y": 295
+    },
+    "R:button21": {
+     "auto": true,
+     "x": 1914,
+     "y": 311
+    },
+    "R:button22": {
+     "auto": true,
+     "x": 2140,
+     "y": 311
+    },
+    "R:button23": {
+     "auto": true,
+     "x": 1462,
+     "y": 354
+    },
+    "R:button24": {
+     "auto": true,
+     "x": 1236,
+     "y": 359
+    },
+    "R:button37": {
+     "auto": true,
+     "x": 1688,
+     "y": 402
+    },
+    "R:button38": {
+     "auto": true,
+     "x": 1914,
+     "y": 402
+    },
+    "R:button39": {
+     "auto": true,
+     "x": 2140,
+     "y": 434
+    },
+    "R:button40": {
+     "auto": true,
+     "x": 1688,
+     "y": 461
+    },
+    "R:button41": {
+     "auto": true,
+     "x": 1236,
+     "y": 482
+    },
+    "R:button45": {
+     "auto": true,
+     "x": 1914,
+     "y": 492
+    },
+    "R:button48": {
+     "auto": true,
+     "x": 1914,
+     "y": 477
+    },
+    "R:button49": {
+     "auto": true,
+     "x": 1236,
+     "y": 482
+    },
+    "R:button51": {
+     "auto": true,
+     "x": 1462,
+     "y": 510
+    },
+    "R:button52": {
+     "auto": true,
+     "x": 2140,
+     "y": 509
+    },
+    "R:button56": {
+     "auto": true,
+     "x": 1688,
+     "y": 536
+    },
+    "R:button57": {
+     "auto": true,
+     "x": 1914,
+     "y": 536
+    },
+    "R:button58": {
+     "auto": true,
+     "x": 1236,
+     "y": 541
+    },
+    "R:button59": {
+     "auto": true,
+     "x": 1462,
+     "y": 569
+    },
+    "R:button62": {
+     "auto": true,
+     "x": 1688,
+     "y": 627
+    },
+    "R:button63": {
+     "auto": true,
+     "x": 1914,
+     "y": 627
+    },
+    "R:button64": {
+     "auto": true,
+     "x": 1236,
+     "y": 632
+    },
+    "R:button81": {
+     "auto": true,
+     "x": 2140,
+     "y": 675
+    },
+    "R:x": {
+     "auto": true,
+     "x": 1462,
+     "y": 687
+    },
+    "R:y": {
+     "auto": true,
+     "x": 1688,
+     "y": 686
+    },
+    "R:z": {
+     "auto": true,
+     "x": 1236,
+     "y": 691
+    },
+    "L:button24": {
+     "auto": true,
+     "x": 242,
+     "y": 402
+    },
+    "L:z": {
+     "auto": true,
+     "x": 920,
+     "y": 659
+    },
+    "R:button60": {
+     "auto": true,
+     "x": 2140,
+     "y": 616
+    },
+    "R:button61": {
+     "auto": true,
+     "x": 1462,
+     "y": 628
+    }
+   }
+  },
   "both|vpc cdt-vmax throttle|vpc cdt-vmax throttle": {
    "cards": {
     "L:button1": {
@@ -2721,17 +2721,17 @@
     "L:button2": {
      "auto": true,
      "x": 16,
-     "y": 1374
+     "y": 1375
     },
     "L:button3": {
      "auto": true,
      "x": 242,
-     "y": 1374
+     "y": 1375
     },
     "L:button4": {
      "auto": true,
      "x": 468,
-     "y": 1374
+     "y": 1375
     },
     "L:button5": {
      "auto": false,
@@ -2740,8 +2740,8 @@
     },
     "L:button6": {
      "auto": false,
-     "x": 1020,
-     "y": 930,
+     "x": 1035,
+     "y": 805,
      "anchor": true,
      "view": 0,
      "u": 0.7956,
@@ -2795,12 +2795,12 @@
     "L:button12": {
      "auto": true,
      "x": 694,
-     "y": 1374
+     "y": 1375
     },
     "L:button13": {
      "auto": false,
-     "x": 1040,
-     "y": 660,
+     "x": 1035,
+     "y": 605,
      "anchor": true,
      "view": 0,
      "u": 0.884,
@@ -2808,7 +2808,7 @@
     },
     "L:button14": {
      "auto": false,
-     "x": 1030,
+     "x": 1035,
      "y": 265,
      "anchor": true,
      "view": 0,
@@ -2817,7 +2817,7 @@
     },
     "L:button15": {
      "auto": false,
-     "x": 1030,
+     "x": 1035,
      "y": 170,
      "anchor": true,
      "view": 0,
@@ -2826,7 +2826,7 @@
     },
     "L:button16": {
      "auto": false,
-     "x": 1025,
+     "x": 1035,
      "y": 380,
      "anchor": true,
      "view": 0,
@@ -2836,7 +2836,7 @@
     "L:button17": {
      "auto": false,
      "x": 1035,
-     "y": 540,
+     "y": 525,
      "anchor": true,
      "view": 0,
      "u": 0.8122,
@@ -2907,8 +2907,8 @@
     },
     "L:axis4": {
      "auto": false,
-     "x": 1040,
-     "y": 830,
+     "x": 1035,
+     "y": 745,
      "anchor": true,
      "view": 0,
      "u": 0.8122,
@@ -2917,7 +2917,7 @@
     "L:axis5": {
      "auto": false,
      "x": 1035,
-     "y": 730,
+     "y": 665,
      "anchor": true,
      "view": 0,
      "u": 0.8199,
@@ -2935,22 +2935,22 @@
     "L:axis7": {
      "auto": true,
      "x": 694,
-     "y": 1506
+     "y": 1509
     },
     "L:axis8": {
      "auto": true,
      "x": 16,
-     "y": 1522
+     "y": 1525
     },
     "R:button1": {
      "auto": false,
-     "x": 965,
-     "y": 1245
+     "x": 960,
+     "y": 1280
     },
     "R:button2": {
      "auto": false,
-     "x": 1325,
-     "y": 290,
+     "x": 1335,
+     "y": 500,
      "anchor": true,
      "view": 0,
      "u": 0.3057,
@@ -2958,8 +2958,8 @@
     },
     "R:button3": {
      "auto": false,
-     "x": 1325,
-     "y": 205,
+     "x": 1335,
+     "y": 435,
      "anchor": true,
      "view": 0,
      "u": 0.2737,
@@ -2981,12 +2981,12 @@
     },
     "R:button6": {
      "auto": false,
-     "x": 1315,
-     "y": 130,
+     "x": 1335,
+     "y": 385,
      "anchor": true,
      "view": 0,
-     "u": 0.2914,
-     "v": 0.1662
+     "u": 0.2961,
+     "v": 0.1725
     },
     "R:button7": {
      "auto": true,
@@ -3004,8 +3004,8 @@
     },
     "R:button9": {
      "auto": false,
-     "x": 1330,
-     "y": 365,
+     "x": 1335,
+     "y": 565,
      "anchor": true,
      "view": 0,
      "u": 0.382,
@@ -3022,8 +3022,8 @@
     },
     "R:button11": {
      "auto": false,
-     "x": 1345,
-     "y": 570,
+     "x": 1335,
+     "y": 610,
      "anchor": true,
      "view": 0,
      "u": 0.3787,
@@ -3036,8 +3036,8 @@
     },
     "R:button13": {
      "auto": false,
-     "x": 1310,
-     "y": 45,
+     "x": 1315,
+     "y": 30,
      "anchor": true,
      "view": 0,
      "u": 0.2892,
@@ -3045,8 +3045,8 @@
     },
     "R:button14": {
      "auto": false,
-     "x": 1925,
-     "y": 120,
+     "x": 1975,
+     "y": 110,
      "anchor": true,
      "view": 0,
      "u": 0.3698,
@@ -3054,7 +3054,7 @@
     },
     "R:button15": {
      "auto": false,
-     "x": 2050,
+     "x": 2190,
      "y": 85,
      "anchor": true,
      "view": 0,
@@ -3072,8 +3072,8 @@
     },
     "R:button17": {
      "auto": false,
-     "x": 2120,
-     "y": 280,
+     "x": 1990,
+     "y": 310,
      "anchor": true,
      "view": 0,
      "u": 0.3765,
@@ -3090,7 +3090,7 @@
     },
     "R:button19": {
      "auto": false,
-     "x": 2075,
+     "x": 2005,
      "y": 0,
      "anchor": true,
      "view": 0,
@@ -3099,8 +3099,8 @@
     },
     "R:button20": {
      "auto": false,
-     "x": 2005,
-     "y": 545,
+     "x": 2210,
+     "y": 405,
      "anchor": true,
      "view": 0,
      "u": 0.4693,
@@ -3108,8 +3108,8 @@
     },
     "R:button21": {
      "auto": false,
-     "x": 2195,
-     "y": 825,
+     "x": 2215,
+     "y": 795,
      "anchor": true,
      "view": 0,
      "u": 0.4516,
@@ -3117,8 +3117,8 @@
     },
     "R:button22": {
      "auto": false,
-     "x": 2225,
-     "y": 510,
+     "x": 2215,
+     "y": 515,
      "anchor": true,
      "view": 0,
      "u": 0.4969,
@@ -3136,7 +3136,7 @@
     "R:button24": {
      "auto": false,
      "x": 2190,
-     "y": 935,
+     "y": 880,
      "anchor": true,
      "view": 0,
      "u": 0.4395,
@@ -3155,42 +3155,42 @@
     "R:button27": {
      "auto": true,
      "x": 1236,
-     "y": 1426
+     "y": 1427
     },
     "R:button28": {
      "auto": true,
      "x": 1914,
-     "y": 1426
+     "y": 1427
     },
     "R:button29": {
      "auto": true,
      "x": 2140,
-     "y": 1426
+     "y": 1427
     },
     "R:button30": {
      "auto": true,
      "x": 1462,
-     "y": 1442
+     "y": 1443
     },
     "R:button31": {
      "auto": true,
      "x": 1236,
-     "y": 1484
+     "y": 1486
     },
     "R:button32": {
      "auto": true,
      "x": 1914,
-     "y": 1484
+     "y": 1486
     },
     "R:button33": {
      "auto": true,
      "x": 2140,
-     "y": 1484
+     "y": 1486
     },
     "R:button34": {
      "auto": true,
      "x": 1462,
-     "y": 1500
+     "y": 1502
     },
     "R:button35": {
      "auto": true,
@@ -3200,12 +3200,12 @@
     "R:button36": {
      "auto": true,
      "x": 1236,
-     "y": 1542
+     "y": 1545
     },
     "R:axis1": {
      "auto": false,
-     "x": 1345,
-     "y": 850,
+     "x": 1335,
+     "y": 820,
      "anchor": true,
      "view": 0,
      "u": 0.5356,
@@ -3213,8 +3213,8 @@
     },
     "R:axis2": {
      "auto": false,
-     "x": 1340,
-     "y": 740,
+     "x": 1335,
+     "y": 730,
      "anchor": true,
      "view": 0,
      "u": 0.5257,
@@ -3222,27 +3222,35 @@
     },
     "R:axis3": {
      "auto": false,
-     "x": 1355,
-     "y": 965,
+     "x": 1335,
+     "y": 930,
      "anchor": true,
      "view": 0,
      "u": 0.5517,
      "v": 0.6278
     },
     "R:axis4": {
-     "auto": true,
-     "x": 1914,
-     "y": 1542
+     "auto": false,
+     "x": 1330,
+     "y": 285,
+     "anchor": true,
+     "view": 0,
+     "u": 0.2694,
+     "v": 0.1833
     },
     "R:axis5": {
-     "auto": true,
-     "x": 2140,
-     "y": 1542
+     "auto": false,
+     "x": 1330,
+     "y": 170,
+     "anchor": true,
+     "view": 0,
+     "u": 0.2749,
+     "v": 0.1559
     },
     "R:axis6": {
      "auto": false,
-     "x": 1340,
-     "y": 640,
+     "x": 1335,
+     "y": 655,
      "anchor": true,
      "view": 0,
      "u": 0.2903,
@@ -3251,12 +3259,12 @@
     "R:axis7": {
      "auto": true,
      "x": 1462,
-     "y": 1558
+     "y": 1561
     },
     "R:axis8": {
      "auto": true,
      "x": 1688,
-     "y": 1565
+     "y": 1566
     },
     "L:button23": {
      "auto": false,
@@ -3288,42 +3296,42 @@
     "L:button25": {
      "auto": true,
      "x": 920,
-     "y": 1374
+     "y": 1375
     },
     "L:button26": {
      "auto": true,
      "x": 242,
-     "y": 1432
+     "y": 1434
     },
     "L:button27": {
      "auto": true,
      "x": 920,
-     "y": 1432
+     "y": 1434
     },
     "L:button28": {
      "auto": true,
      "x": 694,
-     "y": 1448
+     "y": 1450
     },
     "L:button29": {
      "auto": true,
      "x": 16,
-     "y": 1464
+     "y": 1466
     },
     "L:button30": {
      "auto": true,
      "x": 468,
-     "y": 1481
+     "y": 1482
     },
     "L:button31": {
      "auto": true,
      "x": 242,
-     "y": 1490
+     "y": 1493
     },
     "L:button32": {
      "auto": true,
      "x": 920,
-     "y": 1490
+     "y": 1493
     }
    }
   }
