@@ -213,3 +213,7 @@ details.mon .monbody{display:flex;flex-direction:column;gap:3px;margin:6px 0 2px
 .monrow b{font-family:var(--f-mono);color:var(--accent)}
 @media (max-width:640px){ details.mon .monbody{margin-left:0} }
 .monwarn{color:var(--c-combat)}
+
+/* ---------- setup picker ---------- */
+.setup{display:flex;align-items:center;gap:6px;font-family:var(--f-display);text-transform:uppercase;letter-spacing:.06em;font-size:13px;color:var(--dim)}
+.setup select{max-width:260px}

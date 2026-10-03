@@ -2,12 +2,16 @@
 "use strict";
 const W = 1600, MIN_H = 900, CW = 210, GAP = 16, MARGIN = 30;
 /* Product photos supplied by the user (VIRPIL official imagery), background removed. */
-const IMG = {sA:"assets/virpil/aeromax-r-view1.webp", sB:"assets/virpil/aeromax-r-view2.webp", tA:"assets/virpil/vmax-throttle-view1.webp", tB:"assets/virpil/vmax-throttle-view2.webp"};
-const AR = {sA:393/502, sB:393/516, tA:539/571, tB:542/548};
+const IMG = {sA:"assets/virpil/aeromax-r-view1.webp", sB:"assets/virpil/aeromax-r-view2.webp", tA:"assets/virpil/vmax-throttle-view1.webp", tB:"assets/virpil/vmax-throttle-view2.webp",
+  oA:"assets/virpil/aeromax-l-omni-view1.webp", oB:"assets/virpil/aeromax-l-omni-view2.webp"};
+const AR = {sA:393/502, sB:393/516, tA:539/571, tB:542/548, oA:473/560, oB:436/560};
 const PRESETS = {
   "virpil-stick":      {name:"Aeromax-R stick · both views", src:[IMG.sA, IMG.sB], ar:[AR.sA, AR.sB]},
   "virpil-stick-a":    {name:"Aeromax-R stick · view 1",     src:[IMG.sA],         ar:[AR.sA]},
   "virpil-stick-b":    {name:"Aeromax-R stick · view 2",     src:[IMG.sB],         ar:[AR.sB]},
+  "virpil-omni-l-a":   {name:"Aeromax-L OmniThrottle · view 1", src:[IMG.oA],        ar:[AR.oA]},
+  "virpil-omni-l-b":   {name:"Aeromax-L OmniThrottle · view 2", src:[IMG.oB],        ar:[AR.oB]},
+  "virpil-omni-l":     {name:"Aeromax-L OmniThrottle · both views", src:[IMG.oA, IMG.oB], ar:[AR.oA, AR.oB]},
   "virpil-throttle":   {name:"VMAX throttle · both views",   src:[IMG.tA, IMG.tB], ar:[AR.tA, AR.tB]},
   "virpil-throttle-a": {name:"VMAX throttle · view 1",       src:[IMG.tA],         ar:[AR.tA]},
   "virpil-throttle-b": {name:"VMAX throttle · view 2",       src:[IMG.tB],         ar:[AR.tB]},
@@ -15,9 +19,13 @@ const PRESETS = {
 function detectPreset(dev){
   const p = (dev.product||"").toLowerCase();
   if (!p || !/^(js|g)\d/.test(dev.id)) return null;
+  const left = /^(l-|left\b|l\s)/.test(p.trim());
+  // A left-hand Aeromax (or anything calling itself an OmniThrottle) gets the Aeromax-L picture.
+  // This comes before the throttle test, because "omnithrottle" contains "throttle".
+  if (/omni/.test(p) || (left && /aero/.test(p))) return {preset:"virpil-omni-l-a", mirror:false};
   if (/throttle|vmax|\bthr\b|cm3 thr/.test(p)) return {preset:"virpil-throttle", mirror:false};
   if (/stick|aero|alpha|mongoos|warbrd|constellation|grip|joystick/.test(p))
-    return {preset:"virpil-stick", mirror:/^(l-|left\b|l\s)/.test(p.trim())};
+    return {preset:"virpil-stick", mirror:left};
   return null;
 }
 const imageFor = lay => lay.preset === "custom" ? (lay.image ? [lay.image] : null) : (lay.preset && PRESETS[lay.preset] ? PRESETS[lay.preset].src : null);
@@ -272,6 +280,7 @@ function load(text, fileName, isExample, quiet, isDefault){
       if (S.isExample){ S.sc = null; S.isExample = false; S.scName = ""; }
       if (!S.sc){ const sv = store.get("scbb.xml", null); if (sv && sv.text){ try { S.sc = parseActionMaps(sv.text); S.scName = sv.fileName; } catch {} } }
       S.tab = "both";
+      if (!isDefault && !quiet) store.set("scbb.setup", "custom");
       if (!quiet) toast(`Loaded Gremlin profile: ${S.gr.devices.length} physical device${S.gr.devices.length>1?"s":""}` + (S.sc ? "" : " — now drop your actionmaps.xml to resolve game actions"));
     } else if (kind === "sc"){
       S.sc = parseActionMaps(text); S.scName = fileName; S.isExample = !!isExample; S.scDefault = !!isDefault;
@@ -282,7 +291,7 @@ function load(text, fileName, isExample, quiet, isDefault){
         store.set("scbb.xml", {text, fileName});
         if (!S.gr){ const gv = store.get("scbb.gremlin", null); if (gv && gv.text){ try { S.gr = parseGremlin(gv.text); S.grName = gv.fileName; } catch {} } }
       }
-      if (!isExample && !isDefault && !quiet) toast(`Loaded ${S.sc.bindings.length} bindings from ${fileName}`);
+      if (!isExample && !isDefault && !quiet){ store.set("scbb.setup", "custom"); toast(`Loaded ${S.sc.bindings.length} bindings from ${fileName}`); }
     } else throw new Error("That file is neither a Star Citizen bindings file (<ActionMaps>) nor a Joystick Gremlin profile (<profile>).");
     rebuild();
   } catch(e){ toast(e.message, true); }
@@ -320,6 +329,10 @@ function parseGremlin(text){
   if (root.tagName !== "profile" || !devsEl) throw new Error("No Joystick Gremlin <profile><devices> found in that file.");
   const devices = [];
   const allModifierModes = new Set([...root.getElementsByTagName("temporary-mode-switch")].map(t=>t.getAttribute("name")));
+  // How often each mode is inherited from anywhere in the profile: the usual base mode ("SCM Mode") is the
+  // one the others inherit, even on a device whose own modes are all stand-alone.
+  const globalInherit = {};
+  for (const m of root.getElementsByTagName("mode")){ const i = m.getAttribute("inherit"); if (i) globalInherit[i] = (globalInherit[i]||0) + 1; }
   for (const d of kids(devsEl, "device")){
     if ((d.getAttribute("type")||"") !== "joystick") continue;
     const modes = kids(d, "mode");
@@ -328,7 +341,9 @@ function parseGremlin(text){
     const inheritCount = {};
     modes.forEach(m => { const i = m.getAttribute("inherit"); if (i) inheritCount[i] = (inheritCount[i]||0)+1; });
     const roots = modes.filter(m => !m.getAttribute("inherit"));
-    const base = roots.sort((a,b)=>(inheritCount[b.getAttribute("name")]||0)-(inheritCount[a.getAttribute("name")]||0))[0] || modes[0];
+    const nm = m => m.getAttribute("name"), busy = m => m.getElementsByTagName("container").length;
+    const base = roots.filter(m => !allModifierModes.has(nm(m))).concat(roots).sort((a,b) =>
+      ((inheritCount[nm(b)]||0) - (inheritCount[nm(a)]||0)) || ((globalInherit[nm(b)]||0) - (globalInherit[nm(a)]||0)) || (busy(b) - busy(a)))[0] || modes[0];
     const baseName = base.getAttribute("name");
     const entries = [];
     for (const m of modes){
@@ -1115,8 +1130,9 @@ function resolveSides(){
   if (!saved || (saved.left && !L) || (saved.right && !R)){
     const kind = d => (detectPreset(d)||{}).preset || "";
     const thr = cands.find(d => kind(d) === "virpil-throttle");
-    const sticks = cands.filter(d => kind(d) === "virpil-stick");
-    const leftStick = sticks.find(d => /^(l-|left\b|l\s)/i.test((d.product||"").trim()));
+    const isOmni = d => kind(d).startsWith("virpil-omni-l");
+    const sticks = cands.filter(d => kind(d) === "virpil-stick" || isOmni(d));
+    const leftStick = sticks.find(d => isOmni(d) || /^(l-|left\b|l\s)/i.test((d.product||"").trim()));
     L = thr || leftStick || cands[0] || null;
     R = sticks.find(d => d !== L) || cands.find(d => d !== L) || null;
   }
@@ -1722,12 +1738,8 @@ function openLayoutModal(){
         el("button",{class:"btn primary", onclick:()=>{
           try{
             const o = JSON.parse(ta.value);
-            const l = o.layouts || o;
-            if (typeof l !== "object") throw 0;
-            layouts = Object.assign(layouts, l); saveLayouts();
-            if (o.sides){ store.set("scbb.sides", {left:o.sides.left||null, right:o.sides.right||null}); if (S.data) resolveSides(); }
-            if (o.tab){ S.tab = o.tab; store.set("scbb.tab", S.tab); }
-            close(); if (S.data) rebuild(); else renderView(); toast("Layout applied");
+            if (!o || typeof o !== "object") throw 0;
+            close(); applySetup(o, {label:"pasted layout"}).then(renderSetups);
           } catch { toast("That text isn’t a valid layout JSON.", true); }
         }},"Apply pasted layout"))));
   document.body.append(m); ta.focus();
@@ -1770,15 +1782,94 @@ function renderTable(v){
 const nat = (a,b) => { const na=+(a.match(/\d+/)||[0])[0], nb=+(b.match(/\d+/)||[0])[0]; return a.replace(/\d+/,"").localeCompare(b.replace(/\d+/,"")) || na-nb; };
 
 /* ------------------------------------------------------------ file input */
-function readFile(f){
-  if (!f) return;
-  const r = new FileReader();
-  r.onload = () => load(String(r.result), f.name, false);
-  r.onerror = () => toast("Couldn’t read that file.", true);
-  r.readAsText(f);
+/* A layout JSON is a complete setup: it names the game bindings and Gremlin profile to load and carries the
+   pictures, card layouts, hands and opening page. Opening or dropping one switches everything in one go.
+   The XML files it names are taken from the same drop if they are there, otherwise fetched from next to
+   index.html. Files dropped without a layout JSON load on their own, as before. */
+const fkey = n => String(n).toLowerCase().replace(/[^a-z0-9]/g, "");   // tolerant file-name match
+function parseSetup(text){
+  const t = String(text).trimStart(); if (t[0] !== "{") return null;
+  try { const o = JSON.parse(t); return o && typeof o === "object" && (o.app === "sc-binding-board" || o.layouts) ? o : null; } catch { return null; }
+}
+async function handleFiles(fileList){
+  const items = [];
+  for (const f of fileList){ try { items.push({name:f.name, text: await f.text()}); } catch { toast("Couldn’t read " + f.name, true); } }
+  const setups = [], others = [];
+  for (const it of items){ const o = parseSetup(it.text); if (o) setups.push({o, name:it.name}); else others.push(it); }
+  if (!setups.length){ for (const it of others) load(it.text, it.name, false); return; }
+  const used = await applySetup(setups[0].o, {dropped:others, label:setups[0].name});
+  for (const it of others) if (!used.has(it)) load(it.text, it.name, false);
+}
+async function applySetup(o, {dropped = [], label = "", file = null} = {}){
+  const used = new Set();
+  const list = Array.isArray(o.bindings) ? o.bindings : [];
+  const got = [], missing = [];
+  for (const item of list){
+    const path = typeof item === "string" ? item : (item.path || item.name || "");
+    const name = (typeof item === "object" && item.name) || path.split("/").pop();
+    let text = typeof item === "object" && item.text ? item.text : null;
+    if (text == null){ const d = dropped.find(x => !used.has(x) && fkey(x.name) === fkey(name)); if (d){ text = d.text; used.add(d); } }
+    if (text == null && path && location.protocol !== "file:"){ try { text = await fetchText(path); } catch {} }
+    if (text == null) missing.push(name); else got.push({text, name});
+  }
+  // Files dropped under another name: if exactly the missing kinds are there, use them.
+  for (const d of dropped){
+    if (!missing.length) break;
+    if (used.has(d)) continue;
+    const kind = sniff(d.text); if (!kind) continue;
+    if (got.some(g => sniff(g.text) === kind)) continue;
+    got.push({text:d.text, name:d.name}); used.add(d); missing.shift();
+  }
+  const lay = o.layouts || (o.app ? null : o);
+  if (lay && typeof lay === "object"){ layouts = Object.assign(layouts, JSON.parse(JSON.stringify(lay))); saveLayouts(); }
+  if (o.sides) store.set("scbb.sides", {left:o.sides.left || null, right:o.sides.right || null});
+  if (got.length){
+    if (!missing.length){            // a complete setup replaces both files
+      S.sc = S.gr = null; S.scDefault = S.grDefault = S.isExample = false; S.scName = S.grName = "";
+      store.set("scbb.xml", null); store.set("scbb.gremlin", null);
+    }
+    got.sort((a,b) => (sniff(a.text) === "sc" ? 0 : 1) - (sniff(b.text) === "sc" ? 0 : 1));
+    for (const f of got) load(f.text, f.name, false, true, false);
+  }
+  if (o.tab){ S.tab = o.tab; store.set("scbb.tab", S.tab); }
+  if (got.length) store.set("scbb.setup", missing.length ? "custom" : (file || "custom"));
+  S.cmp = null; S.q = ""; $("#q").value = "";
+  if (S.sc || S.gr) rebuild(); else renderAll();
+  if (missing.length) toast(`Layout applied, but ${missing.length === 1 ? "this file wasn’t" : "these files weren’t"} found: ${missing.join(", ")}. Drop ${missing.length === 1 ? "it" : "them"} together with the layout file, or put ${missing.length === 1 ? "it" : "them"} next to index.html.`, true, 9000);
+  else toast(got.length ? `Setup loaded${label ? " from " + label : ""}: ${got.map(g => g.name).join(" + ")}` : `Layout applied${label ? " from " + label : ""}`, false, 5000);
+  return used;
+}
+
+/* Setup picker: the setups listed in default-layout.json ("setups": [{name, file}]). */
+function setupList(){ return DEFAULTS && Array.isArray(DEFAULTS.setups) ? DEFAULTS.setups : []; }
+function renderSetups(){
+  const sel = $("#setupSel"); if (!sel) return;
+  const list = setupList();
+  sel.parentElement.hidden = !list.length;
+  if (!list.length) return;
+  const own = !!(store.get("scbb.xml", null) || store.get("scbb.gremlin", null));
+  let cur = store.get("scbb.setup", null);
+  if (!cur || (cur !== "custom" && !list.some(s => s.file === cur))) cur = own ? "custom" : (list[0] && list[0].file);
+  if (cur !== "custom" && cur !== list[0].file && !own) cur = list[0].file;
+  sel.textContent = "";
+  for (const s of list) sel.append(el("option",{value:s.file}, s.name));
+  if (cur === "custom") sel.append(el("option",{value:"custom"}, "Your own files"));
+  sel.value = cur;
+}
+async function chooseSetup(file){
+  const list = setupList(), s = list.find(x => x.file === file);
+  if (!s) return;
+  if (s === list[0] && (s.file === DEFAULTS_URL || !s.data)){ await resetToDefaults(); store.set("scbb.setup", s.file); renderSetups(); return; }
+  try {
+    const o = s.data || parseSetup(await fetchText(s.file));
+    if (!o) throw new Error(s.file + " isn’t a Binding Board layout file.");
+    await applySetup(o, {label:s.name, file:s.file});
+  } catch(e){ toast("Couldn’t load that setup: " + e.message, true); }
+  renderSetups();
 }
 $("#btnOpen").addEventListener("click", ()=>$("#file").click());
-$("#file").addEventListener("change", e=>{ [...e.target.files].forEach(readFile); e.target.value=""; });
+$("#file").addEventListener("change", e=>{ const fs = [...e.target.files]; e.target.value = ""; handleFiles(fs).then(renderSetups); });
+$("#setupSel").addEventListener("change", e=>chooseSetup(e.target.value));
 $("#btnDemo").addEventListener("click", ()=>load(DEMO, "example_layout.xml", true));
 $("#btnCompare").addEventListener("click", ()=>$("#fileCmp").click());
 $("#fileCmp").addEventListener("change", e=>{ const f = e.target.files[0]; e.target.value = ""; if (!f) return;
@@ -1787,10 +1878,11 @@ $("#btnDefaults").addEventListener("click", ()=>resetToDefaults());
 const drop = $("#drop");
 ["dragenter","dragover"].forEach(t=>document.addEventListener(t, e=>{ if ([...(e.dataTransfer?.types||[])].includes("Files")){ e.preventDefault(); drop.classList.add("drag"); } }));
 ["dragleave","drop"].forEach(t=>document.addEventListener(t, e=>{ if (t==="dragleave" && e.relatedTarget) return; drop.classList.remove("drag"); }));
-document.addEventListener("drop", e=>{ e.preventDefault(); [...(e.dataTransfer?.files||[])].forEach(readFile); });
+document.addEventListener("drop", e=>{ e.preventDefault(); handleFiles([...(e.dataTransfer?.files||[])]).then(renderSetups); });
 document.addEventListener("paste", e=>{
   if (e.target.closest && e.target.closest("input,textarea")) return;
-  const t = e.clipboardData?.getData("text"); if (t && sniff(t)) load(t, "pasted.xml", false);
+  const t = e.clipboardData?.getData("text"); if (!t) return;
+  const o = parseSetup(t); if (o) applySetup(o, {label:"pasted layout"}).then(renderSetups); else if (sniff(t)) load(t, "pasted.xml", false);
 });
 let qTimer; $("#q").addEventListener("input", e=>{ clearTimeout(qTimer); qTimer = setTimeout(()=>{ stopListen(); S.q = e.target.value.trim(); refreshFilter(); }, 120); });
 
@@ -1955,9 +2047,12 @@ function applyDefaults(force){
     }
     if (changed) saveLayouts();
   }
-  if (DEFAULTS.sides && (force || !store.get("scbb.sides", null)))
+  // Hands and opening page are only forced on visitors who are on the default setup (no files of their own).
+  const own = !!(store.get("scbb.xml", null) || store.get("scbb.gremlin", null));
+  const f2 = force && !own;
+  if (DEFAULTS.sides && (f2 || !store.get("scbb.sides", null)))
     store.set("scbb.sides", {left: DEFAULTS.sides.left || null, right: DEFAULTS.sides.right || null});
-  if (DEFAULTS.tab && (force || !store.get("scbb.tab", null))){ S.tab = DEFAULTS.tab; store.set("scbb.tab", S.tab); }
+  if (DEFAULTS.tab && (f2 || !store.get("scbb.tab", null))){ S.tab = DEFAULTS.tab; store.set("scbb.tab", S.tab); }
 }
 async function loadDefaultBindings(){
   const list = DEFAULTS && Array.isArray(DEFAULTS.bindings) ? DEFAULTS.bindings : [];
@@ -1977,10 +2072,11 @@ async function loadDefaultBindings(){
   return got.length > 0;
 }
 async function resetToDefaults(){
-  for (const k of ["scbb.xml","scbb.gremlin","scbb.tab","scbb.sides"]) store.set(k, null);
+  for (const k of ["scbb.xml","scbb.gremlin","scbb.tab","scbb.sides","scbb.setup"]) store.set(k, null);
   S.sc = S.gr = null; S.scDefault = S.grDefault = S.isExample = false; S.q = ""; $("#q").value = "";
   layouts = {}; applyDefaults(true);
   if (!(await loadDefaultBindings())) rebuild();
+  renderSetups();
   toast("Back to the default layout and bindings");
 }
 
@@ -1992,6 +2088,7 @@ async function resetToDefaults(){
     applyDefaults(fresh);
     store.set("scbb.defaultsStamp", DEFAULTS_STAMP);
     const b = $("#btnDefaults"); if (b) b.hidden = false;
+    renderSetups();
   }
   const saved = store.get("scbb.xml", null), savedGr = store.get("scbb.gremlin", null);
   try { if (saved && saved.text){ S.sc = parseActionMaps(saved.text); S.scName = saved.fileName || "actionmaps.xml"; } } catch {}

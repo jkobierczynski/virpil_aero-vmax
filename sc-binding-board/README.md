@@ -78,8 +78,38 @@ in the *vJoy → game* row to show them as separate cards again.
    physical button to draw a leader line. Double-click a pin to detach it.
 4. **Layout JSON** copies all layouts so you can back them up or share them.
 
-Pictures: VIRPIL VMAX throttle and Aeromax-R stick are built in (two views
-each). Any other device can use an uploaded picture.
+Pictures: VIRPIL VMAX throttle, Aeromax-R stick and the left-hand Aeromax-L on
+the OmniThrottle base are built in (two views each). A device whose name
+starts with "LEFT"/"L-" and contains "Aeromax", or contains "Omni", gets the
+Aeromax-L picture automatically. Any other device can use an uploaded picture.
+
+### Setups: switch everything in one action
+
+A layout JSON is a complete **setup**: it names the game bindings and the
+Joystick Gremlin profile, and carries the device pictures, the card layout,
+which device is in which hand, and the page that opens. Loading one switches
+all of that at once:
+
+- **Setup** (top of the page) lists the setups in this folder; choosing one
+  loads it. The list comes from `"setups"` in `default-layout.json`:
+
+  ```json
+  "setups": [
+    {"name": "VMAX throttle + Aeromax-R", "file": "default-layout.json"},
+    {"name": "Aeromax-L + Aeromax-R",     "file": "laero-raero-layout.json"}
+  ]
+  ```
+
+  The first entry is the default that visitors see. To add a setup, put its
+  layout JSON and the two XML files it names in this folder and add a line.
+- **Open…** or drag-and-drop accepts a layout JSON too. The XML files it names
+  are taken from the same drop if they are there (the names don't have to
+  match exactly), otherwise fetched from this folder. If one can't be found,
+  the page says which.
+- **Layout JSON → Copy** produces such a file for whatever is on screen;
+  **Apply** there loads one the same way.
+- The chosen setup is remembered in the browser. **Defaults** goes back to
+  the default setup.
 
 ### Default layout, view and bindings
 
@@ -139,7 +169,8 @@ Put a `default-layout.json` next to `index.html` and the page starts from it:
 
 ```
 index.html                 page markup
-default-layout.json        default layouts, view, hands and bindings
+default-layout.json        the default setup, and the list of setups
+laero-raero-layout.json    setup: Aeromax-L + Aeromax-R (with its two XML files)
 layout_KJ_481_…xml         default game bindings (KJ 4.8.1 export)
 Joystick Gremlin Profile … default Gremlin profile (KJ 4.5.0)
 *.xml                      default bindings files named in default-layout.json
