@@ -24,7 +24,7 @@
  </CustomisationUIHeader>
  <deviceoptions name="Mouse">
   <option input="@pause_OptionsMouseSmoothing" saturation="0.089999989"/>
-  <option input="@pause_OptionsMouseSmoothing" saturation="0.089999989"/>
+  <option input="@pause_OptionsMouseSmoothing" saturation="0.071999997"/>
   <option input="@pause_OptionsMouseAcceleration" acceleration="0.0060000001"/>
  </deviceoptions>
  <deviceoptions name="vJoy Device  {BEAD1234-0000-0000-0000-504944564944}">
@@ -169,7 +169,6 @@
   </action>
   <action name="v_view_freelook_mode">
    <rebind input="kb1_mouse3"/>
-   <rebind input="js1_button6"/>
   </action>
   <action name="v_view_interact">
    <rebind input="js2_ "/>
@@ -229,9 +228,6 @@
   </action>
   <action name="v_ifcs_throttle_swap_mode">
    <rebind input="js1_button20"/>
-  </action>
-  <action name="v_ifcs_toggle_esp">
-   <rebind input="js1_button6"/>
   </action>
   <action name="v_ifcs_toggle_gforce_safety">
    <rebind input="js1_button47"/>
